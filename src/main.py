@@ -14,6 +14,7 @@ from pdf_processor import process_pdf, process_multiple_pdfs, SlideInfo
 from stt_parser import merge_stt_files, save_parsed_stt, STTDocument
 from matcher import run_matching
 from summarizer import run_summarization
+from generator import generate_markdown
 
 
 @dataclass
@@ -303,6 +304,9 @@ def process_lecture(lecture: LectureFolder) -> Path | None:
     
     # Step 4: 핵심 내용 정리
     summary_result = run_summarization(output_dir)
+    
+    # Step 5: 마크다운 결과물 생성
+    md_path = generate_markdown(output_dir)
     
     return output_dir
 
