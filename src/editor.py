@@ -114,35 +114,68 @@ tab1, tab2, tab3 = st.tabs(["📊 슬라이드별 내용", "💬 Q&A", "🎯 Key
 
 # 탭 1: 슬라이드별 내용
 with tab1:
-    st.header("슬라이드별 내용 편집")
-    
     # 슬라이드 선택
     num_slides = len(data['summaries'])
     
-    col1, col2 = st.columns([1, 3])
+    # 선택된 슬라이드 초기화
+    if 'selected_slide' not in st.session_state:
+        st.session_state.selected_slide = 1
     
-    with col1:
-        slide_num = st.number_input(
-            "슬라이드 번호",
-            min_value=1,
-            max_value=num_slides,
-            value=1,
-            key="slide_selector"
-        )
+    slide_num = st.session_state.selected_slide
+    
+    # 3컬럼 레이아웃: 썸네일 | 큰 이미지 | 편집 영역
+    thumb_col, img_col, edit_col = st.columns([1, 2, 3])
+    
+    # 왼쪽: 썸네일 목록 (스크롤 가능)
+    with thumb_col:
+        st.markdown("**슬라이드 목록**")
         
-        # 슬라이드 이미지
+        # 스크롤 가능한 썸네일 컨테이너
+        thumb_container = st.container(height=600)
+        
+        with thumb_container:
+            for i in range(1, num_slides + 1):
+                thumb_b64 = get_slide_image(selected_lecture, i)
+                
+                if thumb_b64:
+                    # 선택된 슬라이드는 테두리 굵게
+                    if i == slide_num:
+                        border_style = "border: 4px solid #FF4B4B; border-radius: 8px;"
+                    else:
+                        border_style = "border: 1px solid #ddd; border-radius: 4px;"
+                    
+                    # 썸네일 클릭 버튼
+                    if st.button(
+                        f"#{i}",
+                        key=f"thumb_{i}",
+                        use_container_width=True
+                    ):
+                        st.session_state.selected_slide = i
+                        st.rerun()
+                    
+                    # 썸네일 이미지 표시
+                    st.markdown(
+                        f'<img src="data:image/png;base64,{thumb_b64}" style="width:100%; {border_style}">',
+                        unsafe_allow_html=True
+                    )
+                    st.markdown("---")
+    
+    # 중간: 선택된 슬라이드 큰 이미지
+    with img_col:
+        st.markdown(f"**슬라이드 {slide_num}**")
         img_b64 = get_slide_image(selected_lecture, slide_num)
         if img_b64:
             st.image(f"data:image/png;base64,{img_b64}", use_container_width=True)
         else:
             st.warning("이미지 없음")
     
-    with col2:
+    # 오른쪽: 편집 영역
+    with edit_col:
         # 현재 슬라이드 데이터
         slide_idx = slide_num - 1
         current_summary = data['summaries'][slide_idx]
         
-        st.subheader(f"슬라이드 {slide_num} 주요 내용")
+        st.markdown(f"**슬라이드 {slide_num} 주요 내용**")
         
         # 핵심 포인트 편집
         key_points = current_summary.get('key_points', [])
