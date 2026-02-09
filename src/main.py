@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict
 from pdf_processor import process_pdf, process_multiple_pdfs, SlideInfo
 from stt_parser import merge_stt_files, save_parsed_stt, STTDocument
 from matcher import run_matching
+from summarizer import run_summarization
 
 
 @dataclass
@@ -299,6 +300,9 @@ def process_lecture(lecture: LectureFolder) -> Path | None:
     
     # Step 3: 슬라이드-STT 매칭
     matches = run_matching(output_dir)
+    
+    # Step 4: 핵심 내용 정리
+    summary_result = run_summarization(output_dir)
     
     return output_dir
 
