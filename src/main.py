@@ -2,11 +2,17 @@
 """
 강의 노트 자동 정리 프로그램
 Step 1: 강의 선택
+Step 2: PDF/TXT 파일 처리
 """
 
 import os
+import json
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+
+from pdf_processor import process_pdf, process_multiple_pdfs, SlideInfo
+from stt_parser import merge_stt_files, save_parsed_stt, STTDocument
+from matcher import run_matching
 
 
 @dataclass
@@ -197,10 +203,104 @@ def main():
         print("\n✅ 작업 대상 확정!")
         print(f"   → {selected.name}")
         
-        # TODO: Step 2로 진행 (PDF/TXT 처리)
-        print("\n[다음 단계: PDF 및 TXT 파일 처리]")
+        # Step 2: PDF/TXT 처리
+        output_dir = process_lecture(selected)
+        
+        if output_dir:
+            print("\n" + "=" * 70)
+            print("🎉 Step 2 완료!")
+            print("=" * 70)
+            print(f"📁 출력 폴더: {output_dir}")
+            print("\n생성된 파일:")
+            for item in sorted(output_dir.iterdir()):
+                if item.is_dir():
+                    file_count = len(list(item.glob("*")))
+                    print(f"   📂 {item.name}/ ({file_count}개 파일)")
+                else:
+                    size_kb = item.stat().st_size / 1024
+                    print(f"   📄 {item.name} ({size_kb:.1f} KB)")
+            print("=" * 70)
     else:
         print("\n취소되었습니다.")
+
+
+def get_output_folder(lecture: LectureFolder) -> Path:
+    """강의별 출력 폴더 경로 반환"""
+    script_dir = Path(__file__).parent.parent
+    output_dir = script_dir / "output" / lecture.name
+    return output_dir
+
+
+def process_lecture(lecture: LectureFolder) -> Path | None:
+    """
+    Step 2: 강의 PDF/TXT 파일 처리
+    
+    Returns:
+        출력 폴더 경로 또는 None (실패 시)
+    """
+    print("\n" + "=" * 70)
+    print("🔄 Step 2: 파일 처리 시작")
+    print("=" * 70)
+    
+    output_dir = get_output_folder(lecture)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 2-1: PDF 처리
+    print("\n[2-1] PDF 슬라이드 변환")
+    pdf_paths = sorted([lecture.path / f for f in lecture.pdf_files])
+    
+    if len(pdf_paths) == 1:
+        slides = process_pdf(pdf_paths[0], output_dir)
+    else:
+        print(f"   여러 PDF 파일 감지 ({len(pdf_paths)}개) - 순서대로 병합")
+        slides = process_multiple_pdfs(pdf_paths, output_dir)
+    
+    # 슬라이드 정보 저장
+    slides_info = [
+        {
+            "page_num": s.page_num,
+            "image_path": str(s.image_path.name),
+            "text_preview": s.text[:200] if s.text else ""
+        }
+        for s in slides
+    ]
+    
+    slides_json_path = output_dir / "slides_info.json"
+    with open(slides_json_path, 'w', encoding='utf-8') as f:
+        json.dump(slides_info, f, ensure_ascii=False, indent=2)
+    print(f"   ✅ 슬라이드 정보: {slides_json_path.name}")
+    
+    # 2-2: STT 처리
+    print("\n[2-2] STT 스크립트 파싱")
+    txt_paths = sorted([lecture.path / f for f in lecture.txt_files])
+    
+    stt_doc = merge_stt_files(txt_paths)
+    
+    stt_json_path = output_dir / "stt_parsed.json"
+    save_parsed_stt(stt_doc, stt_json_path)
+    
+    # 2-3: 메타데이터 저장
+    print("\n[2-3] 메타데이터 저장")
+    metadata = {
+        "lecture_name": lecture.name,
+        "lecture_path": str(lecture.path),
+        "pdf_files": lecture.pdf_files,
+        "txt_files": lecture.txt_files,
+        "total_slides": len(slides),
+        "total_utterances": len(stt_doc.utterances),
+        "stt_duration": stt_doc.duration,
+        "stt_participants": stt_doc.participants
+    }
+    
+    metadata_path = output_dir / "metadata.json"
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=2)
+    print(f"   ✅ 메타데이터: {metadata_path.name}")
+    
+    # Step 3: 슬라이드-STT 매칭
+    matches = run_matching(output_dir)
+    
+    return output_dir
 
 
 if __name__ == "__main__":
