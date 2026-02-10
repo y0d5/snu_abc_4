@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNU ABC 강의 노트 아카이브</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .lecture-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .lecture-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .lecture-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .lecture-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .lecture-num {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .lecture-title {
+            flex: 1;
+        }
+        .lecture-title h2 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .lecture-title .speaker {
+            color: #666;
+            font-size: 0.95em;
+        }
+        .lecture-date {
+            color: #999;
+            font-size: 0.9em;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            color: #666;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: white;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 SNU ABC 강의 노트</h1>
+            <p>AI/BigData/Cloud 과정 강의 아카이브</p>
+        </header>
+        
+        <div class="lecture-grid">
+            <a href="10-최재식 -AI기술을 통한 산업혁신 동향-260129/10-AI기술을_통한_산업혁신_동향-강의노트.html" class="lecture-card">
+                <div class="lecture-header">
+                    <div class="lecture-num">10</div>
+                    <div class="lecture-title">
+                        <h2>AI기술을 통한 산업혁신 동향</h2>
+                        <div class="speaker">최재식 </div>
+                    </div>
+                    <div class="lecture-date">2026.01.29</div>
+                </div>
+            </a>
+            <a href="11-박현우-조직과 개인의 AX-260604/11-조직과_개인의_AX-강의노트.html" class="lecture-card">
+                <div class="lecture-header">
+                    <div class="lecture-num">11</div>
+                    <div class="lecture-title">
+                        <h2>조직과 개인의 AX</h2>
+                        <div class="speaker">박현우</div>
+                    </div>
+                    <div class="lecture-date">2026.06.04</div>
+                </div>
+            </a>
+            <a href="12-이헌준-Computing System for AI-260206/12-Computing_System_for_AI-강의노트.html" class="lecture-card">
+                <div class="lecture-header">
+                    <div class="lecture-num">12</div>
+                    <div class="lecture-title">
+                        <h2>Computing System for AI</h2>
+                        <div class="speaker">이헌준</div>
+                    </div>
+                    <div class="lecture-date">2026.02.06</div>
+                </div>
+            </a>
+        </div>
+        
+        <footer>
+            마지막 업데이트: 2026년 02월 10일 18:23
+        </footer>
+    </div>
+</body>
+</html>
