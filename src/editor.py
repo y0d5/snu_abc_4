@@ -161,11 +161,18 @@ with tab1:
     # 슬라이드 선택
     num_slides = len(data['summaries'])
     
+    # 모든 슬라이드 이미지 경로 수집 (먼저 준비)
+    slide_images = []
+    slide_captions = []
+    for i in range(1, num_slides + 1):
+        img_path = OUTPUT_DIR / selected_lecture / "slides" / f"slide_{i:03d}.png"
+        if img_path.exists():
+            slide_images.append(str(img_path))
+            slide_captions.append(str(i))
+    
     # 선택된 슬라이드 초기화
     if 'selected_slide' not in st.session_state:
         st.session_state.selected_slide = 1
-    
-    slide_num = st.session_state.selected_slide
     
     # 3컬럼 레이아웃: 썸네일 | 큰 이미지 | 편집 영역
     thumb_col, img_col, edit_col = st.columns([1.2, 2, 2.8])
@@ -176,31 +183,25 @@ with tab1:
         thumb_container = st.container(height=700)
         
         with thumb_container:
-            # 모든 슬라이드 이미지 경로 수집
-            slide_images = []
-            slide_captions = []
-            for i in range(1, num_slides + 1):
-                img_path = OUTPUT_DIR / selected_lecture / "slides" / f"slide_{i:03d}.png"
-                if img_path.exists():
-                    slide_images.append(str(img_path))
-                    slide_captions.append(str(i))
-            
-            # 이미지 선택 컴포넌트
+            # 이미지 선택 컴포넌트 - 선택 시 자동 반영 (rerun 없음)
             if slide_images:
-                selected_idx = image_select(
+                selected_path = image_select(
                     label="",
                     images=slide_images,
                     captions=slide_captions,
-                    index=slide_num - 1,
-                    use_container_width=True
+                    index=st.session_state.selected_slide - 1,
+                    use_container_width=True,
+                    key="slide_selector"
                 )
                 
-                # 선택된 이미지의 인덱스 찾기
-                if selected_idx in slide_images:
-                    new_slide = slide_images.index(selected_idx) + 1
-                    if new_slide != slide_num:
-                        st.session_state.selected_slide = new_slide
-                        st.rerun()
+                # 선택된 이미지에서 슬라이드 번호 추출
+                if selected_path in slide_images:
+                    slide_num = slide_images.index(selected_path) + 1
+                    st.session_state.selected_slide = slide_num
+                else:
+                    slide_num = st.session_state.selected_slide
+            else:
+                slide_num = 1
     
     # 중간: 선택된 슬라이드 큰 이미지
     with img_col:
