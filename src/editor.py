@@ -104,8 +104,20 @@ def deploy_to_github():
     return result.returncode == 0, result.stdout + result.stderr
 
 
+def run_refinement(lecture_name):
+    """포인트 재배치 실행"""
+    import subprocess
+    result = subprocess.run(
+        ["python3", "refiner.py", f"../output/{lecture_name}"],
+        cwd=PROJECT_ROOT / "src",
+        capture_output=True,
+        text=True
+    )
+    return result.returncode == 0, result.stdout + result.stderr
+
+
 # 상단 헤더 영역 (컴팩트하게)
-header_col1, header_col2, header_col3, header_col4, header_col5 = st.columns([0.7, 3.5, 0.7, 0.8, 1])
+header_col1, header_col2, header_col3, header_col4, header_col5, header_col6 = st.columns([0.6, 3, 0.6, 0.7, 0.8, 0.8])
 
 lectures = get_available_lectures()
 
@@ -145,6 +157,19 @@ with header_col4:
                 st.toast("HTML 생성 실패", icon="❌")
 
 with header_col5:
+    if st.button("🔄 재배치", use_container_width=True, help="LLM으로 포인트 재배치"):
+        with st.spinner("포인트 재배치 중... (1-2분 소요)"):
+            success, output = run_refinement(selected_lecture)
+            if success:
+                st.toast("포인트 재배치 완료!", icon="✅")
+                # 데이터 다시 로드
+                st.session_state.data = load_lecture_data(selected_lecture)
+                st.rerun()
+            else:
+                st.toast("재배치 실패", icon="❌")
+                st.error(output)
+
+with header_col6:
     if st.button("🚀 GitHub", use_container_width=True):
         with st.spinner("GitHub에 배포 중..."):
             success, output = deploy_to_github()
@@ -220,26 +245,61 @@ with tab1:
         
         st.markdown(f"**슬라이드 {slide_num} 주요 내용**")
         
-        # 핵심 포인트 편집
-        key_points = current_summary.get('key_points', [])
+        # 버전 키 (순서 변경 시 증가)
+        version_key = f'version_{selected_lecture}_{slide_num}'
+        if version_key not in st.session_state:
+            st.session_state[version_key] = 0
+        version = st.session_state[version_key]
         
-        # 기존 포인트 수정
+        # 핵심 포인트 가져오기
+        key_points = list(current_summary.get('key_points', []))
+        
+        # 순서 변경 함수
+        def move_point(direction, idx):
+            points = list(data['summaries'][slide_idx]['key_points'])
+            if direction == 'up' and idx > 0:
+                points[idx], points[idx-1] = points[idx-1], points[idx]
+            elif direction == 'down' and idx < len(points) - 1:
+                points[idx], points[idx+1] = points[idx+1], points[idx]
+            data['summaries'][slide_idx]['key_points'] = points
+            st.session_state[version_key] = version + 1
+        
+        # 포인트 편집 (순서 변경 버튼 포함)
         new_points = []
         for i, point in enumerate(key_points):
-            edited = st.text_area(
-                f"포인트 {i+1}",
-                value=point,
-                key=f"point_{slide_num}_{i}",
-                height=80
-            )
-            if edited.strip():
-                new_points.append(edited.strip())
+            col_up, col_down, col_text = st.columns([0.04, 0.04, 0.92])
+            
+            with col_up:
+                if i > 0:
+                    if st.button("▲", key=f"up_{slide_num}_{i}_{version}"):
+                        move_point('up', i)
+                        st.rerun()
+            
+            with col_down:
+                if i < len(key_points) - 1:
+                    if st.button("▼", key=f"down_{slide_num}_{i}_{version}"):
+                        move_point('down', i)
+                        st.rerun()
+            
+            with col_text:
+                edited = st.text_area(
+                    f"포인트 {i+1}",
+                    value=point,
+                    key=f"point_{slide_num}_{i}_{version}",
+                    height=80,
+                    label_visibility="collapsed"
+                )
+                new_points.append(edited.strip() if edited.strip() else None)
+        
+        # None 제거 (빈 내용 삭제)
+        new_points = [p for p in new_points if p]
         
         # 새 포인트 추가
+        st.markdown("---")
         new_point = st.text_area(
             "➕ 새 포인트 추가",
             value="",
-            key=f"new_point_{slide_num}",
+            key=f"new_point_{slide_num}_{version}",
             height=80,
             placeholder="새로운 핵심 포인트를 입력하세요..."
         )
@@ -249,9 +309,7 @@ with tab1:
         # 데이터 업데이트
         data['summaries'][slide_idx]['key_points'] = new_points
         
-        # 포인트 삭제 버튼
-        if key_points:
-            st.caption("포인트를 삭제하려면 내용을 비우고 저장하세요.")
+        st.caption("💡 ▲▼로 순서 변경 | 내용 비우면 삭제")
 
 # 탭 2: Q&A
 with tab2:
