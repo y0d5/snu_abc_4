@@ -156,7 +156,7 @@ def run_refinement(output_dir):
         
         # 현재 슬라이드 텍스트
         slide_info = slides_info[slide_idx]
-        slide_text = slide_info.get('text', '')
+        slide_text = slide_info.get('text_preview', '') or slide_info.get('text', '')
         
         if not slide_text.strip():
             continue

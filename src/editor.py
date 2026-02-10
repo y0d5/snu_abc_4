@@ -81,12 +81,77 @@ def load_lecture_data(lecture_name):
 
 
 def save_lecture_data(lecture_name, data):
-    """강의 데이터 저장"""
+    """강의 데이터 저장 (버전 백업 포함)"""
+    from datetime import datetime
+    
     lecture_dir = OUTPUT_DIR / lecture_name
     summary_path = lecture_dir / "lecture_summary.json"
     
+    # 버전 백업 폴더 생성
+    versions_dir = lecture_dir / "versions"
+    versions_dir.mkdir(exist_ok=True)
+    
+    # 타임스탬프로 백업 파일 생성
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = versions_dir / f"lecture_summary_{timestamp}.json"
+    
+    # 현재 파일 백업 (존재하는 경우)
+    if summary_path.exists():
+        import shutil
+        shutil.copy2(summary_path, backup_path)
+    
+    # 새 데이터 저장
     with open(summary_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    # 오래된 버전 정리 (최근 20개만 유지)
+    versions = sorted(versions_dir.glob("lecture_summary_*.json"), reverse=True)
+    for old_version in versions[20:]:
+        old_version.unlink()
+    
+    return len(versions[:20])  # 현재 버전 수 반환
+
+
+def get_version_list(lecture_name):
+    """저장된 버전 목록 조회"""
+    lecture_dir = OUTPUT_DIR / lecture_name
+    versions_dir = lecture_dir / "versions"
+    
+    if not versions_dir.exists():
+        return []
+    
+    versions = []
+    for f in sorted(versions_dir.glob("lecture_summary_*.json"), reverse=True):
+        # 파일명에서 타임스탬프 추출
+        ts = f.stem.replace("lecture_summary_", "")
+        # 포맷팅: 20260209_143022 -> 2026-02-09 14:30:22
+        try:
+            formatted = f"{ts[:4]}-{ts[4:6]}-{ts[6:8]} {ts[9:11]}:{ts[11:13]}:{ts[13:15]}"
+            versions.append({"file": f.name, "time": formatted, "path": str(f)})
+        except:
+            versions.append({"file": f.name, "time": ts, "path": str(f)})
+    
+    return versions
+
+
+def restore_version(lecture_name, version_path):
+    """이전 버전 복원"""
+    import shutil
+    from datetime import datetime
+    
+    lecture_dir = OUTPUT_DIR / lecture_name
+    summary_path = lecture_dir / "lecture_summary.json"
+    versions_dir = lecture_dir / "versions"
+    
+    # 현재 상태 먼저 백업
+    if summary_path.exists():
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = versions_dir / f"lecture_summary_{timestamp}.json"
+        shutil.copy2(summary_path, backup_path)
+    
+    # 선택한 버전으로 복원
+    shutil.copy2(version_path, summary_path)
+    return True
 
 
 def get_slide_image(lecture_name, slide_num):
@@ -143,9 +208,6 @@ if not lectures:
     st.error("편집할 강의가 없습니다. 먼저 강의 노트를 생성해주세요.")
     st.stop()
 
-with header_col1:
-    st.markdown("**📚 편집기**")
-
 with header_col2:
     selected_lecture = st.selectbox(
         "강의 선택",
@@ -154,17 +216,70 @@ with header_col2:
         label_visibility="collapsed"
     )
 
+with header_col1:
+    # 편집 중인 슬라이드 수 표시
+    edit_count = len([k for k in st.session_state.get('slide_edits', {}).keys() if k.startswith(selected_lecture + '_')]) if 'slide_edits' in st.session_state else 0
+    if edit_count > 0:
+        st.markdown(f"**📝 ({edit_count})**")
+    else:
+        st.markdown("**📚**")
+
 # 데이터 로드
 if 'data' not in st.session_state or st.session_state.get('current_lecture') != selected_lecture:
     st.session_state.data = load_lecture_data(selected_lecture)
     st.session_state.current_lecture = selected_lecture
+    # 강의 변경 시 편집 버퍼 초기화
+    st.session_state.slide_edits = {}
 
 data = st.session_state.data
 
 with header_col3:
     if st.button("💾 저장", type="primary", use_container_width=True):
-        save_lecture_data(selected_lecture, data)
-        st.toast("저장되었습니다!", icon="✅")
+        # 먼저 모든 content_ 키에서 slide_edits로 동기화
+        if 'slide_edits' not in st.session_state:
+            st.session_state.slide_edits = {}
+        
+        for key in list(st.session_state.keys()):
+            if key.startswith('content_'):
+                try:
+                    s_num = int(key.replace('content_', ''))
+                    edit_key = f"{selected_lecture}_{s_num}"
+                    st.session_state.slide_edits[edit_key] = st.session_state[key]
+                except ValueError:
+                    pass
+        
+        # 편집 버퍼의 모든 내용을 data에 적용
+        for edit_key, edited_text in st.session_state.slide_edits.items():
+            # edit_key 형식: "{lecture_name}_{slide_num}"
+            parts = edit_key.rsplit('_', 1)
+            if len(parts) == 2 and parts[0] == selected_lecture:
+                try:
+                    slide_num = int(parts[1])
+                    slide_idx = slide_num - 1
+                    if 0 <= slide_idx < len(data['summaries']):
+                        # 텍스트를 포인트 목록으로 파싱
+                        if edited_text.strip():
+                            raw_points = edited_text.split('\n\n')
+                            new_points = []
+                            for p in raw_points:
+                                cleaned = ' '.join(line.strip() for line in p.split('\n') if line.strip())
+                                if cleaned.startswith('•') or cleaned.startswith('-') or cleaned.startswith('*'):
+                                    cleaned = cleaned[1:].strip()
+                                if cleaned:
+                                    new_points.append(cleaned)
+                            data['summaries'][slide_idx]['key_points'] = new_points
+                        else:
+                            data['summaries'][slide_idx]['key_points'] = []
+                except ValueError:
+                    pass
+        
+        version_count = save_lecture_data(selected_lecture, data)
+        # 저장 후 편집 버퍼 및 content_ 키 초기화
+        st.session_state.slide_edits = {}
+        for key in list(st.session_state.keys()):
+            if key.startswith('content_'):
+                del st.session_state[key]
+        st.toast(f"저장되었습니다! (버전 {version_count}개 보관중)", icon="✅")
 
 with header_col4:
     if st.button("🔄 HTML", use_container_width=True):
@@ -229,7 +344,7 @@ with header_col6:
                 st.toast("배포 실패 - 터미널 확인", icon="❌")
 
 # 메인 영역 탭
-tab1, tab2, tab3 = st.tabs(["📊 슬라이드별 내용", "💬 Q&A", "🎯 Key Takeaways"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 슬라이드별 내용", "💬 Q&A", "🎯 Key Takeaways", "📁 버전 관리"])
 
 # 탭 1: 슬라이드별 내용
 with tab1:
@@ -271,7 +386,19 @@ with tab1:
                 
                 # 선택된 이미지에서 슬라이드 번호 추출
                 if selected_path in slide_images:
-                    slide_num = slide_images.index(selected_path) + 1
+                    new_slide_num = slide_images.index(selected_path) + 1
+                    prev_slide_num = st.session_state.selected_slide
+                    
+                    # 슬라이드 변경 시 이전 슬라이드의 편집 내용 저장
+                    if new_slide_num != prev_slide_num:
+                        prev_content_key = f"content_{prev_slide_num}"
+                        if prev_content_key in st.session_state:
+                            prev_edit_key = f"{selected_lecture}_{prev_slide_num}"
+                            if 'slide_edits' not in st.session_state:
+                                st.session_state.slide_edits = {}
+                            st.session_state.slide_edits[prev_edit_key] = st.session_state[prev_content_key]
+                    
+                    slide_num = new_slide_num
                     st.session_state.selected_slide = slide_num
                 else:
                     slide_num = st.session_state.selected_slide
@@ -289,84 +416,70 @@ with tab1:
     
     # 오른쪽: 편집 영역
     with edit_col:
+        # 편집 버퍼 초기화 (슬라이드별 편집 내용 저장)
+        if 'slide_edits' not in st.session_state:
+            st.session_state.slide_edits = {}
+        
+        # 모든 content_ 키에서 slide_edits로 동기화 (슬라이드 변경 시 이전 편집 내용 보존)
+        for key in list(st.session_state.keys()):
+            if key.startswith('content_'):
+                try:
+                    s_num = int(key.replace('content_', ''))
+                    sync_edit_key = f"{selected_lecture}_{s_num}"
+                    st.session_state.slide_edits[sync_edit_key] = st.session_state[key]
+                except ValueError:
+                    pass
+        
         # 현재 슬라이드 데이터
         slide_idx = slide_num - 1
         current_summary = data['summaries'][slide_idx]
         
         st.markdown(f"**슬라이드 {slide_num} 주요 내용**")
         
-        # 핵심 포인트 가져오기
-        key_points = list(current_summary.get('key_points', []))
+        # 편집 버퍼에 있으면 버퍼에서, 없으면 원본 데이터에서 가져오기
+        edit_key = f"{selected_lecture}_{slide_num}"
+        if edit_key not in st.session_state.slide_edits:
+            # 원본 데이터로 초기화
+            key_points = list(current_summary.get('key_points', []))
+            st.session_state.slide_edits[edit_key] = "\n\n".join(key_points) if key_points else ""
         
-        # 편집 모드 선택
-        edit_mode = st.radio(
-            "모드",
-            ["✏️ 내용 편집", "↕️ 순서 변경"],
-            horizontal=True,
+        # 현재 슬라이드의 초기값 결정 (버퍼에서)
+        initial_value = st.session_state.slide_edits[edit_key]
+        
+        # 하나의 큰 텍스트 영역으로 편집
+        edited_text = st.text_area(
+            "주요 내용 편집",
+            value=initial_value,
+            height=400,
+            key=f"content_{slide_num}",
             label_visibility="collapsed",
-            key=f"mode_{slide_num}"
+            placeholder="포인트 1\n\n포인트 2\n\n포인트 3\n\n(빈 줄로 포인트 구분)"
         )
         
-        if edit_mode == "↕️ 순서 변경":
-            # 드래그 앤 드롭 순서 변경
-            if key_points:
-                st.caption("📌 항목을 드래그하여 순서를 변경하세요")
-                
-                # 포인트를 표시용으로 변환
-                display_points = [
-                    f"[{i+1}] {p[:80]}..." if len(p) > 80 else f"[{i+1}] {p}"
-                    for i, p in enumerate(key_points)
-                ]
-                
-                sorted_display = sort_items(
-                    display_points,
-                    key=f"sort_{slide_num}"
-                )
-                
-                # 정렬 결과를 원본에 적용
-                if sorted_display != display_points:
-                    # 새 순서 추출
-                    new_order = []
-                    for item in sorted_display:
-                        idx = display_points.index(item)
-                        new_order.append(key_points[idx])
-                    
-                    data['summaries'][slide_idx]['key_points'] = new_order
-                    st.success("✅ 순서가 변경되었습니다!")
-                
-                st.caption("💡 모양이 다르지만 드래그로 순서 변경이 가능합니다")
-            else:
-                st.info("포인트가 없습니다.")
+        # 편집 내용을 버퍼에 저장
+        st.session_state.slide_edits[edit_key] = edited_text
         
-        else:
-            # 내용 편집 모드
+        # 편집된 텍스트를 다시 포인트 목록으로 파싱 (빈 줄로 구분)
+        if edited_text.strip():
+            # 빈 줄(2개 이상 연속 줄바꿈)로 분리
+            raw_points = edited_text.split('\n\n')
             new_points = []
-            for i, point in enumerate(key_points):
-                edited = st.text_area(
-                    f"포인트 {i+1}",
-                    value=point,
-                    key=f"point_{slide_num}_{i}",
-                    height=80
-                )
-                if edited.strip():
-                    new_points.append(edited.strip())
             
-            # 새 포인트 추가
-            st.markdown("---")
-            new_point = st.text_area(
-                "➕ 새 포인트 추가",
-                value="",
-                key=f"new_point_{slide_num}",
-                height=80,
-                placeholder="새로운 핵심 포인트를 입력하세요..."
-            )
-            if new_point.strip():
-                new_points.append(new_point.strip())
-            
-            # 데이터 업데이트
-            data['summaries'][slide_idx]['key_points'] = new_points
+            for p in raw_points:
+                # 각 포인트 정리 (줄바꿈을 공백으로)
+                cleaned = ' '.join(line.strip() for line in p.split('\n') if line.strip())
+                # 불릿 기호 제거
+                if cleaned.startswith('•') or cleaned.startswith('-') or cleaned.startswith('*'):
+                    cleaned = cleaned[1:].strip()
+                if cleaned:
+                    new_points.append(cleaned)
+        else:
+            new_points = []
         
-        st.caption("💡 내용 비우면 삭제됨")
+        # 데이터 업데이트 (메모리상에서만, 저장은 버튼 클릭 시)
+        data['summaries'][slide_idx]['key_points'] = new_points
+        
+        st.caption("💡 빈 줄로 포인트 구분 | 여러 슬라이드 편집 후 한꺼번에 저장 가능")
 
 # 탭 2: Q&A
 with tab2:
@@ -463,3 +576,29 @@ with tab3:
     
     data['key_takeaways'] = new_takeaways
 
+# 탭 4: 버전 관리
+with tab4:
+    st.header("버전 관리")
+    st.caption("저장할 때마다 자동으로 백업됩니다. 최근 20개 버전이 보관됩니다.")
+    
+    versions = get_version_list(selected_lecture)
+    
+    if not versions:
+        st.info("아직 저장된 버전이 없습니다. '💾 저장' 버튼을 눌러 첫 버전을 만들어보세요.")
+    else:
+        st.write(f"**저장된 버전: {len(versions)}개**")
+        
+        for i, v in enumerate(versions):
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.text(f"📄 {v['time']}")
+            with col2:
+                if st.button("복원", key=f"restore_{i}", type="secondary"):
+                    if restore_version(selected_lecture, v['path']):
+                        st.toast(f"버전 복원됨: {v['time']}", icon="✅")
+                        # 데이터 다시 로드
+                        st.session_state.data = load_lecture_data(selected_lecture)
+                        st.rerun()
+        
+        st.divider()
+        st.warning("⚠️ 복원 시 현재 상태가 자동 백업된 후 선택한 버전으로 되돌아갑니다.")
