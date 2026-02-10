@@ -11,13 +11,32 @@ import streamlit as st
 import json
 from pathlib import Path
 import base64
+from streamlit_image_select import image_select
 
 # 페이지 설정
 st.set_page_config(
     page_title="강의 노트 편집기",
     page_icon="📝",
-    layout="wide"
+    layout="wide",
+    menu_items={}
 )
+
+# CSS 스타일
+st.markdown("""
+<style>
+    /* Deploy 버튼과 햄버거 메뉴 숨기기 */
+    .stDeployButton, 
+    [data-testid="stToolbar"],
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    /* 상단 패딩 줄이기 */
+    .block-container {
+        padding-top: 0.5rem !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # 프로젝트 경로
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -73,8 +92,8 @@ def regenerate_html(lecture_name):
     return result.returncode == 0
 
 
-# 사이드바 - 강의 선택
-st.sidebar.title("📚 강의 노트 편집기")
+# 상단 헤더 영역 (컴팩트하게)
+header_col1, header_col2, header_col3, header_col4 = st.columns([0.8, 4, 0.8, 1])
 
 lectures = get_available_lectures()
 
@@ -82,11 +101,16 @@ if not lectures:
     st.error("편집할 강의가 없습니다. 먼저 강의 노트를 생성해주세요.")
     st.stop()
 
-selected_lecture = st.sidebar.selectbox(
-    "강의 선택",
-    lectures,
-    format_func=lambda x: x.split("-")[1] + " - " + "-".join(x.split("-")[2:-1]) if len(x.split("-")) > 3 else x
-)
+with header_col1:
+    st.markdown("**📚 편집기**")
+
+with header_col2:
+    selected_lecture = st.selectbox(
+        "강의 선택",
+        lectures,
+        format_func=lambda x: x.split("-")[1] + " - " + "-".join(x.split("-")[2:-1]) if len(x.split("-")) > 3 else x,
+        label_visibility="collapsed"
+    )
 
 # 데이터 로드
 if 'data' not in st.session_state or st.session_state.get('current_lecture') != selected_lecture:
@@ -95,19 +119,18 @@ if 'data' not in st.session_state or st.session_state.get('current_lecture') != 
 
 data = st.session_state.data
 
-# 사이드바 - 저장 버튼
-st.sidebar.divider()
+with header_col3:
+    if st.button("💾 저장", type="primary", use_container_width=True):
+        save_lecture_data(selected_lecture, data)
+        st.toast("저장되었습니다!", icon="✅")
 
-if st.sidebar.button("💾 저장", type="primary", use_container_width=True):
-    save_lecture_data(selected_lecture, data)
-    st.sidebar.success("저장되었습니다!")
-
-if st.sidebar.button("🔄 HTML 재생성", use_container_width=True):
-    with st.spinner("HTML 생성 중..."):
-        if regenerate_html(selected_lecture):
-            st.sidebar.success("HTML이 재생성되었습니다!")
-        else:
-            st.sidebar.error("HTML 생성 실패")
+with header_col4:
+    if st.button("🔄 HTML", use_container_width=True):
+        with st.spinner("HTML 생성 중..."):
+            if regenerate_html(selected_lecture):
+                st.toast("HTML이 재생성되었습니다!", icon="✅")
+            else:
+                st.toast("HTML 생성 실패", icon="❌")
 
 # 메인 영역 탭
 tab1, tab2, tab3 = st.tabs(["📊 슬라이드별 내용", "💬 Q&A", "🎯 Key Takeaways"])
@@ -124,41 +147,39 @@ with tab1:
     slide_num = st.session_state.selected_slide
     
     # 3컬럼 레이아웃: 썸네일 | 큰 이미지 | 편집 영역
-    thumb_col, img_col, edit_col = st.columns([1, 2, 3])
+    thumb_col, img_col, edit_col = st.columns([1.2, 2, 2.8])
     
     # 왼쪽: 썸네일 목록 (스크롤 가능)
     with thumb_col:
-        st.markdown("**슬라이드 목록**")
-        
         # 스크롤 가능한 썸네일 컨테이너
-        thumb_container = st.container(height=600)
+        thumb_container = st.container(height=700)
         
         with thumb_container:
+            # 모든 슬라이드 이미지 경로 수집
+            slide_images = []
+            slide_captions = []
             for i in range(1, num_slides + 1):
-                thumb_b64 = get_slide_image(selected_lecture, i)
+                img_path = OUTPUT_DIR / selected_lecture / "slides" / f"slide_{i:03d}.png"
+                if img_path.exists():
+                    slide_images.append(str(img_path))
+                    slide_captions.append(str(i))
+            
+            # 이미지 선택 컴포넌트
+            if slide_images:
+                selected_idx = image_select(
+                    label="",
+                    images=slide_images,
+                    captions=slide_captions,
+                    index=slide_num - 1,
+                    use_container_width=True
+                )
                 
-                if thumb_b64:
-                    # 선택된 슬라이드는 테두리 굵게
-                    if i == slide_num:
-                        border_style = "border: 4px solid #FF4B4B; border-radius: 8px;"
-                    else:
-                        border_style = "border: 1px solid #ddd; border-radius: 4px;"
-                    
-                    # 썸네일 클릭 버튼
-                    if st.button(
-                        f"#{i}",
-                        key=f"thumb_{i}",
-                        use_container_width=True
-                    ):
-                        st.session_state.selected_slide = i
+                # 선택된 이미지의 인덱스 찾기
+                if selected_idx in slide_images:
+                    new_slide = slide_images.index(selected_idx) + 1
+                    if new_slide != slide_num:
+                        st.session_state.selected_slide = new_slide
                         st.rerun()
-                    
-                    # 썸네일 이미지 표시
-                    st.markdown(
-                        f'<img src="data:image/png;base64,{thumb_b64}" style="width:100%; {border_style}">',
-                        unsafe_allow_html=True
-                    )
-                    st.markdown("---")
     
     # 중간: 선택된 슬라이드 큰 이미지
     with img_col:
@@ -216,13 +237,28 @@ with tab2:
     
     qa_section = data.get('qa_section', [])
     
+    # 삭제할 Q&A 인덱스 추적
+    if 'qa_to_delete' not in st.session_state:
+        st.session_state.qa_to_delete = set()
+    
     if not qa_section:
-        st.info("Q&A 내용이 없습니다.")
+        st.info("Q&A 내용이 없습니다. 아래에서 새로 추가할 수 있습니다.")
     
     new_qa_section = []
     
     for i, qa in enumerate(qa_section):
+        # 삭제 예정인 항목은 건너뛰기
+        if i in st.session_state.qa_to_delete:
+            continue
+            
         with st.expander(f"Q{i+1}: {qa.get('question', '')[:50]}...", expanded=False):
+            col_q, col_del = st.columns([6, 1])
+            
+            with col_del:
+                if st.button("🗑️ 삭제", key=f"del_qa_{i}", type="secondary"):
+                    st.session_state.qa_to_delete.add(i)
+                    st.rerun()
+            
             q = st.text_area(
                 "질문",
                 value=qa.get('question', ''),
@@ -242,10 +278,12 @@ with tab2:
                     'answer': a.strip()
                 })
     
+    st.divider()
+    
     # 새 Q&A 추가
     st.subheader("➕ 새 Q&A 추가")
-    new_q = st.text_area("새 질문", key="new_qa_q", height=80)
-    new_a = st.text_area("새 답변", key="new_qa_a", height=120)
+    new_q = st.text_area("새 질문", key="new_qa_q", height=80, placeholder="질문을 입력하세요...")
+    new_a = st.text_area("새 답변", key="new_qa_a", height=120, placeholder="답변을 입력하세요...")
     
     if new_q.strip() and new_a.strip():
         new_qa_section.append({
@@ -254,6 +292,8 @@ with tab2:
         })
     
     data['qa_section'] = new_qa_section
+    
+    st.caption("💡 Q&A를 삭제하려면 각 항목의 '삭제' 버튼을 클릭하세요. 저장 버튼을 눌러야 최종 반영됩니다.")
 
 # 탭 3: Key Takeaways
 with tab3:
@@ -286,6 +326,3 @@ with tab3:
     
     data['key_takeaways'] = new_takeaways
 
-# 하단 안내
-st.divider()
-st.caption("💡 수정 후 '저장' 버튼을 클릭하면 JSON 파일이 업데이트됩니다. 'HTML 재생성'을 클릭하면 최종 문서가 새로 만들어집니다.")
