@@ -36,6 +36,23 @@ st.markdown("""
     .block-container {
         padding-top: 0.5rem !important;
     }
+    
+    /* streamlit-sortables 스타일 오버라이드 */
+    div[data-testid="stVerticalBlock"] div[data-baseweb="card"],
+    .element-container iframe + div,
+    div[class*="sortable"] > div,
+    div[draggable="true"] {
+        background-color: white !important;
+        border: 1px solid #d0d0d0 !important;
+        border-radius: 4px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 8px !important;
+        font-size: 14px !important;
+        text-align: left !important;
+        cursor: grab !important;
+        min-height: 50px !important;
+        line-height: 1.5 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -293,11 +310,11 @@ with tab1:
         if edit_mode == "↕️ 순서 변경":
             # 드래그 앤 드롭 순서 변경
             if key_points:
-                st.caption("드래그하여 순서를 변경하세요")
+                st.caption("📌 항목을 드래그하여 순서를 변경하세요")
                 
-                # 포인트를 짧게 표시 (드래그용)
+                # 포인트를 표시용으로 변환
                 display_points = [
-                    f"{i+1}. {p[:60]}..." if len(p) > 60 else f"{i+1}. {p}"
+                    f"[{i+1}] {p[:80]}..." if len(p) > 80 else f"[{i+1}] {p}"
                     for i, p in enumerate(key_points)
                 ]
                 
@@ -311,12 +328,13 @@ with tab1:
                     # 새 순서 추출
                     new_order = []
                     for item in sorted_display:
-                        # 원본 인덱스 찾기
                         idx = display_points.index(item)
                         new_order.append(key_points[idx])
                     
                     data['summaries'][slide_idx]['key_points'] = new_order
-                    st.success("순서가 변경되었습니다!")
+                    st.success("✅ 순서가 변경되었습니다!")
+                
+                st.caption("💡 모양이 다르지만 드래그로 순서 변경이 가능합니다")
             else:
                 st.info("포인트가 없습니다.")
         
