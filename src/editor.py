@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 import base64
 from streamlit_image_select import image_select
+from streamlit_sortables import sort_items
 
 # 페이지 설정
 st.set_page_config(
@@ -158,16 +159,48 @@ with header_col4:
 
 with header_col5:
     if st.button("🔄 재배치", use_container_width=True, help="LLM으로 포인트 재배치"):
-        with st.spinner("포인트 재배치 중... (1-2분 소요)"):
-            success, output = run_refinement(selected_lecture)
-            if success:
-                st.toast("포인트 재배치 완료!", icon="✅")
-                # 데이터 다시 로드
-                st.session_state.data = load_lecture_data(selected_lecture)
-                st.rerun()
+        st.session_state.show_refinement = True
+        st.rerun()
+
+# 재배치 실행 (별도 처리)
+if st.session_state.get('show_refinement'):
+    del st.session_state['show_refinement']
+    
+    with st.status("🔄 포인트 재배치 중...", expanded=True) as status:
+        st.write("📊 슬라이드 분석 중...")
+        st.write("⏳ LLM이 뒤 슬라이드부터 검토합니다 (1-2분 소요)")
+        
+        success, output = run_refinement(selected_lecture)
+        
+        if success:
+            status.update(label="✅ 재배치 완료!", state="complete", expanded=True)
+            
+            # 로그 파일에서 변경 내역 읽기
+            log_path = OUTPUT_DIR / selected_lecture / "refinement_log.json"
+            if log_path.exists():
+                with open(log_path, 'r', encoding='utf-8') as f:
+                    movements = json.load(f)
+                
+                if movements:
+                    st.success(f"**{len(movements)}개 포인트가 재배치되었습니다!**")
+                    st.write("변경 내역:")
+                    for m in movements[:10]:  # 최대 10개만 표시
+                        st.write(f"- 슬라이드 {m['from']} → {m['to']}: {m['point']}")
+                    if len(movements) > 10:
+                        st.write(f"... 외 {len(movements) - 10}개")
+                else:
+                    st.info("재배치가 필요한 포인트가 없습니다.")
             else:
-                st.toast("재배치 실패", icon="❌")
-                st.error(output)
+                st.info("재배치가 필요한 포인트가 없습니다.")
+            
+            st.write("")
+            st.write("💡 **재배치 결과는 자동 저장되었습니다.** 새로고침해도 유지됩니다.")
+            
+            # 데이터 다시 로드
+            st.session_state.data = load_lecture_data(selected_lecture)
+        else:
+            status.update(label="❌ 재배치 실패", state="error")
+            st.error(output)
 
 with header_col6:
     if st.button("🚀 GitHub", use_container_width=True):
@@ -245,71 +278,77 @@ with tab1:
         
         st.markdown(f"**슬라이드 {slide_num} 주요 내용**")
         
-        # 버전 키 (순서 변경 시 증가)
-        version_key = f'version_{selected_lecture}_{slide_num}'
-        if version_key not in st.session_state:
-            st.session_state[version_key] = 0
-        version = st.session_state[version_key]
-        
         # 핵심 포인트 가져오기
         key_points = list(current_summary.get('key_points', []))
         
-        # 순서 변경 함수
-        def move_point(direction, idx):
-            points = list(data['summaries'][slide_idx]['key_points'])
-            if direction == 'up' and idx > 0:
-                points[idx], points[idx-1] = points[idx-1], points[idx]
-            elif direction == 'down' and idx < len(points) - 1:
-                points[idx], points[idx+1] = points[idx+1], points[idx]
-            data['summaries'][slide_idx]['key_points'] = points
-            st.session_state[version_key] = version + 1
+        # 편집 모드 선택
+        edit_mode = st.radio(
+            "모드",
+            ["✏️ 내용 편집", "↕️ 순서 변경"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"mode_{slide_num}"
+        )
         
-        # 포인트 편집 (순서 변경 버튼 포함)
-        new_points = []
-        for i, point in enumerate(key_points):
-            col_up, col_down, col_text = st.columns([0.04, 0.04, 0.92])
-            
-            with col_up:
-                if i > 0:
-                    if st.button("▲", key=f"up_{slide_num}_{i}_{version}"):
-                        move_point('up', i)
-                        st.rerun()
-            
-            with col_down:
-                if i < len(key_points) - 1:
-                    if st.button("▼", key=f"down_{slide_num}_{i}_{version}"):
-                        move_point('down', i)
-                        st.rerun()
-            
-            with col_text:
+        if edit_mode == "↕️ 순서 변경":
+            # 드래그 앤 드롭 순서 변경
+            if key_points:
+                st.caption("드래그하여 순서를 변경하세요")
+                
+                # 포인트를 짧게 표시 (드래그용)
+                display_points = [
+                    f"{i+1}. {p[:60]}..." if len(p) > 60 else f"{i+1}. {p}"
+                    for i, p in enumerate(key_points)
+                ]
+                
+                sorted_display = sort_items(
+                    display_points,
+                    key=f"sort_{slide_num}"
+                )
+                
+                # 정렬 결과를 원본에 적용
+                if sorted_display != display_points:
+                    # 새 순서 추출
+                    new_order = []
+                    for item in sorted_display:
+                        # 원본 인덱스 찾기
+                        idx = display_points.index(item)
+                        new_order.append(key_points[idx])
+                    
+                    data['summaries'][slide_idx]['key_points'] = new_order
+                    st.success("순서가 변경되었습니다!")
+            else:
+                st.info("포인트가 없습니다.")
+        
+        else:
+            # 내용 편집 모드
+            new_points = []
+            for i, point in enumerate(key_points):
                 edited = st.text_area(
                     f"포인트 {i+1}",
                     value=point,
-                    key=f"point_{slide_num}_{i}_{version}",
-                    height=80,
-                    label_visibility="collapsed"
+                    key=f"point_{slide_num}_{i}",
+                    height=80
                 )
-                new_points.append(edited.strip() if edited.strip() else None)
+                if edited.strip():
+                    new_points.append(edited.strip())
+            
+            # 새 포인트 추가
+            st.markdown("---")
+            new_point = st.text_area(
+                "➕ 새 포인트 추가",
+                value="",
+                key=f"new_point_{slide_num}",
+                height=80,
+                placeholder="새로운 핵심 포인트를 입력하세요..."
+            )
+            if new_point.strip():
+                new_points.append(new_point.strip())
+            
+            # 데이터 업데이트
+            data['summaries'][slide_idx]['key_points'] = new_points
         
-        # None 제거 (빈 내용 삭제)
-        new_points = [p for p in new_points if p]
-        
-        # 새 포인트 추가
-        st.markdown("---")
-        new_point = st.text_area(
-            "➕ 새 포인트 추가",
-            value="",
-            key=f"new_point_{slide_num}_{version}",
-            height=80,
-            placeholder="새로운 핵심 포인트를 입력하세요..."
-        )
-        if new_point.strip():
-            new_points.append(new_point.strip())
-        
-        # 데이터 업데이트
-        data['summaries'][slide_idx]['key_points'] = new_points
-        
-        st.caption("💡 ▲▼로 순서 변경 | 내용 비우면 삭제")
+        st.caption("💡 내용 비우면 삭제됨")
 
 # 탭 2: Q&A
 with tab2:
