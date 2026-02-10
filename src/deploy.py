@@ -14,7 +14,7 @@ import re
 
 PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "output"
-SITE_DIR = PROJECT_ROOT / "site"
+SITE_DIR = PROJECT_ROOT / "docs"
 
 
 def get_lecture_info(folder_name):
@@ -83,16 +83,16 @@ def generate_index_page():
                         info["html_file"] = html_files[0].name
                         lectures.append(info)
     
-    # 번호순 정렬
-    lectures.sort(key=lambda x: int(x["num"]) if x["num"].isdigit() else 0)
+    # 최신순 정렬 (번호 내림차순)
+    lectures.sort(key=lambda x: int(x["num"]) if x["num"].isdigit() else 0, reverse=True)
     
-    # HTML 생성
+    # HTML 생성 (심플한 학교 스타일)
     html = f'''<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNU ABC 강의 노트 아카이브</title>
+    <title>서울대학교 빅데이터 AI CEO 과정 4기 - 강의 노트</title>
     <style>
         * {{
             margin: 0;
@@ -100,117 +100,94 @@ def generate_index_page():
             box-sizing: border-box;
         }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #f0f0f0;
             min-height: 100vh;
             padding: 40px 20px;
+            color: #333;
         }}
         .container {{
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
         }}
         header {{
             text-align: center;
             margin-bottom: 40px;
-            color: white;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #003366;
         }}
         header h1 {{
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 1.6em;
+            color: #003366;
+            font-weight: 600;
+            margin-bottom: 8px;
         }}
         header p {{
-            font-size: 1.1em;
-            opacity: 0.9;
+            font-size: 0.95em;
+            color: #666;
         }}
-        .lecture-grid {{
-            display: grid;
-            gap: 20px;
-        }}
-        .lecture-card {{
+        .lecture-list {{
             background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #ddd;
+        }}
+        .lecture-item {{
+            display: block;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
             text-decoration: none;
             color: inherit;
-            display: block;
+            transition: background 0.15s;
         }}
-        .lecture-card:hover {{
-            transform: translateY(-4px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        .lecture-item:last-child {{
+            border-bottom: none;
         }}
-        .lecture-header {{
+        .lecture-item:hover {{
+            background: #f8f8f8;
+        }}
+        .lecture-info {{
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 12px;
-        }}
-        .lecture-num {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2em;
         }}
         .lecture-title {{
-            flex: 1;
+            font-size: 1em;
+            color: #003366;
         }}
-        .lecture-title h2 {{
-            font-size: 1.3em;
-            color: #333;
-            margin-bottom: 4px;
+        .lecture-title:hover {{
+            text-decoration: underline;
         }}
-        .lecture-title .speaker {{
-            color: #666;
-            font-size: 0.95em;
-        }}
-        .lecture-date {{
-            color: #999;
-            font-size: 0.9em;
+        .lecture-meta {{
+            font-size: 0.85em;
+            color: #888;
         }}
         .empty-state {{
             text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 16px;
+            padding: 40px 20px;
             color: #666;
         }}
         footer {{
             text-align: center;
-            margin-top: 40px;
-            color: white;
-            opacity: 0.7;
-            font-size: 0.9em;
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.8em;
         }}
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📚 SNU ABC 강의 노트</h1>
-            <p>AI/BigData/Cloud 과정 강의 아카이브</p>
+            <h1>서울대학교 빅데이터 AI CEO 과정 4기 - 강의 노트</h1>
         </header>
         
-        <div class="lecture-grid">
+        <div class="lecture-list">
 '''
     
     if lectures:
         for lecture in lectures:
-            html += f'''            <a href="{lecture['folder']}/{lecture['html_file']}" class="lecture-card">
-                <div class="lecture-header">
-                    <div class="lecture-num">{lecture['num']}</div>
-                    <div class="lecture-title">
-                        <h2>{lecture['topic']}</h2>
-                        <div class="speaker">{lecture['speaker']}</div>
-                    </div>
-                    <div class="lecture-date">{lecture['date']}</div>
+            html += f'''            <a href="{lecture['folder']}/{lecture['html_file']}" class="lecture-item">
+                <div class="lecture-info">
+                    <span class="lecture-title">{lecture['num']}. {lecture['topic']} - {lecture['speaker']}</span>
+                    <span class="lecture-meta">{lecture['date']}</span>
                 </div>
             </a>
 '''
@@ -223,7 +200,7 @@ def generate_index_page():
     html += f'''        </div>
         
         <footer>
-            마지막 업데이트: {datetime.now().strftime('%Y년 %m월 %d일 %H:%M')}
+            마지막 업데이트: {datetime.now().strftime('%Y.%m.%d %H:%M')}
         </footer>
     </div>
 </body>
@@ -264,11 +241,11 @@ def git_push():
     
     try:
         # site 폴더 추가
-        subprocess.run(["git", "add", "site/"], cwd=PROJECT_ROOT, check=True)
+        subprocess.run(["git", "add", "docs/"], cwd=PROJECT_ROOT, check=True)
         
         # 변경사항 확인
         result = subprocess.run(
-            ["git", "status", "--porcelain", "site/"],
+            ["git", "status", "--porcelain", "docs/"],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True

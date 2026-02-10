@@ -252,7 +252,7 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
     
     html_parts = []
     
-    # HTML 헤더 (슬라이드 왼쪽 + 포인트 오른쪽 레이아웃)
+    # HTML 헤더 (심플한 학교 스타일)
     html_parts.append(f'''<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -262,22 +262,22 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', sans-serif;
             line-height: 1.6;
             color: #333;
-            background: #f5f5f5;
+            background: #f0f0f0;
         }}
         .container {{ max-width: 1200px; margin: 0 auto; padding: 20px; }}
         header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #f0f0f0;
+            color: #333;
             padding: 30px 20px;
             text-align: center;
             margin-bottom: 24px;
-            border-radius: 12px;
+            border-bottom: 2px solid #003366;
         }}
-        header h1 {{ font-size: 1.8em; margin-bottom: 8px; }}
-        header .meta {{ opacity: 0.9; font-size: 0.95em; }}
+        header h1 {{ font-size: 1.5em; margin-bottom: 8px; color: #003366; font-weight: 600; }}
+        header .meta {{ color: #666; font-size: 0.9em; }}
         
         /* 슬라이드 섹션: 왼쪽 이미지 + 오른쪽 포인트 */
         .slide-section {{
@@ -327,7 +327,7 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
             padding: 8px 12px;
             margin-bottom: 6px;
             background: #f8f9fa;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid #003366;
             border-radius: 4px;
             font-size: 0.95em;
             line-height: 1.5;
@@ -350,10 +350,10 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }}
         .qa-section h2, .takeaways-section h2 {{
-            color: #667eea;
+            color: #003366;
             margin-bottom: 16px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid #ddd;
             font-size: 1.3em;
         }}
         .qa-item {{
@@ -374,7 +374,7 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
         .qa-item .answer {{
             padding-left: 16px;
             color: #555;
-            border-left: 3px solid #764ba2;
+            border-left: 3px solid #003366;
         }}
         
         /* Key Takeaways */
@@ -387,7 +387,7 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
             margin-bottom: 8px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 6px;
-            border-left: 3px solid #764ba2;
+            border-left: 3px solid #003366;
         }}
         .takeaways-section li:last-child {{
             margin-bottom: 0;
