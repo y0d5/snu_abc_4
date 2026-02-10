@@ -154,6 +154,75 @@ def restore_version(lecture_name, version_path):
     return True
 
 
+def delete_version(version_path):
+    """특정 버전 삭제"""
+    from pathlib import Path
+    try:
+        Path(version_path).unlink()
+        return True
+    except:
+        return False
+
+
+def refine_qa_with_llm(question, answer):
+    """LLM을 사용해 Q&A 다듬기"""
+    import os
+    from anthropic import Anthropic
+    
+    # API 키 로드
+    env_path = PROJECT_ROOT / ".env"
+    if env_path.exists():
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip()
+    
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        return None, None, "API 키가 없습니다"
+    
+    try:
+        client = Anthropic(api_key=api_key)
+        
+        prompt = f"""다음 강의 Q&A를 더 명확하고 이해하기 쉽게 다듬어주세요.
+- 질문은 핵심을 명확히 하고, 불필요한 부분을 정리해주세요
+- 답변은 논리적이고 이해하기 쉽게 정리해주세요
+- 원래 의미와 내용은 유지해주세요
+- 한국어로 작성해주세요
+
+원본 질문:
+{question}
+
+원본 답변:
+{answer}
+
+JSON 형식으로 응답해주세요:
+{{"question": "다듬어진 질문", "answer": "다듬어진 답변"}}
+"""
+        
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        result_text = response.content[0].text.strip()
+        
+        # JSON 파싱
+        import re
+        json_match = re.search(r'\{.*\}', result_text, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            return result.get('question', question), result.get('answer', answer), None
+        
+        return question, answer, "응답 파싱 실패"
+    
+    except Exception as e:
+        return question, answer, str(e)
+
+
 def get_slide_image(lecture_name, slide_num):
     """슬라이드 이미지를 base64로 반환"""
     img_path = OUTPUT_DIR / lecture_name / "slides" / f"slide_{slide_num:03d}.png"
@@ -502,7 +571,23 @@ with tab2:
             continue
             
         with st.expander(f"Q{i+1}: {qa.get('question', '')[:50]}...", expanded=False):
-            col_q, col_del = st.columns([6, 1])
+            col_q, col_refine, col_del = st.columns([5, 1, 1])
+            
+            with col_refine:
+                if st.button("✨ 다듬기", key=f"refine_qa_{i}", help="LLM으로 Q&A 다듬기"):
+                    with st.spinner("다듬는 중..."):
+                        new_q, new_a, error = refine_qa_with_llm(
+                            qa.get('question', ''), 
+                            qa.get('answer', '')
+                        )
+                        if error:
+                            st.toast(f"다듬기 실패: {error}", icon="❌")
+                        else:
+                            # 세션 상태에 다듬어진 내용 저장
+                            st.session_state[f"qa_q_{i}"] = new_q
+                            st.session_state[f"qa_a_{i}"] = new_a
+                            st.toast("Q&A가 다듬어졌습니다!", icon="✨")
+                            st.rerun()
             
             with col_del:
                 if st.button("🗑️ 삭제", key=f"del_qa_{i}", type="secondary"):
@@ -589,7 +674,7 @@ with tab4:
         st.write(f"**저장된 버전: {len(versions)}개**")
         
         for i, v in enumerate(versions):
-            col1, col2 = st.columns([4, 1])
+            col1, col2, col3 = st.columns([4, 1, 1])
             with col1:
                 st.text(f"📄 {v['time']}")
             with col2:
@@ -598,7 +683,15 @@ with tab4:
                         st.toast(f"버전 복원됨: {v['time']}", icon="✅")
                         # 데이터 다시 로드
                         st.session_state.data = load_lecture_data(selected_lecture)
+                        st.session_state.slide_edits = {}
                         st.rerun()
+            with col3:
+                if st.button("🗑️", key=f"delete_ver_{i}", help="이 버전 삭제"):
+                    if delete_version(v['path']):
+                        st.toast(f"버전 삭제됨: {v['time']}", icon="🗑️")
+                        st.rerun()
+                    else:
+                        st.toast("삭제 실패", icon="❌")
         
         st.divider()
         st.warning("⚠️ 복원 시 현재 상태가 자동 백업된 후 선택한 버전으로 되돌아갑니다.")
