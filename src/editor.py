@@ -92,8 +92,20 @@ def regenerate_html(lecture_name):
     return result.returncode == 0
 
 
+def deploy_to_github():
+    """GitHub Pages 배포"""
+    import subprocess
+    result = subprocess.run(
+        ["python3", "deploy.py"],
+        cwd=PROJECT_ROOT / "src",
+        capture_output=True,
+        text=True
+    )
+    return result.returncode == 0, result.stdout + result.stderr
+
+
 # 상단 헤더 영역 (컴팩트하게)
-header_col1, header_col2, header_col3, header_col4 = st.columns([0.8, 4, 0.8, 1])
+header_col1, header_col2, header_col3, header_col4, header_col5 = st.columns([0.7, 3.5, 0.7, 0.8, 1])
 
 lectures = get_available_lectures()
 
@@ -131,6 +143,15 @@ with header_col4:
                 st.toast("HTML이 재생성되었습니다!", icon="✅")
             else:
                 st.toast("HTML 생성 실패", icon="❌")
+
+with header_col5:
+    if st.button("🚀 GitHub", use_container_width=True):
+        with st.spinner("GitHub에 배포 중..."):
+            success, output = deploy_to_github()
+            if success:
+                st.toast("GitHub Pages에 배포되었습니다!", icon="✅")
+            else:
+                st.toast("배포 실패 - 터미널 확인", icon="❌")
 
 # 메인 영역 탭
 tab1, tab2, tab3 = st.tabs(["📊 슬라이드별 내용", "💬 Q&A", "🎯 Key Takeaways"])
