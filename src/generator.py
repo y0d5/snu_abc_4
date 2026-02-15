@@ -239,16 +239,8 @@ def generate_markdown(output_dir: Path) -> Path:
 
 def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, lecture_info, html_path):
     """HTML 파일 생성 (슬라이드 왼쪽, 포인트 오른쪽 레이아웃)"""
-    import base64
     
     slides_dir = output_dir / "slides"
-    
-    # Base64로 이미지 인코딩
-    def get_image_base64(img_path):
-        if img_path.exists():
-            with open(img_path, 'rb') as f:
-                return base64.b64encode(f.read()).decode('utf-8')
-        return None
     
     html_parts = []
     
@@ -428,9 +420,16 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
         slide_num = summary.get('slide_num', i + 1)
         key_points = summary.get('key_points', [])
         
-        # 슬라이드 이미지
-        img_path = slides_dir / f"slide_{slide_num:03d}.png"
-        img_base64 = get_image_base64(img_path)
+        # 슬라이드 이미지 (외부 파일 참조 - JPEG 우선, PNG 폴백)
+        jpg_path = slides_dir / f"slide_{slide_num:03d}.jpg"
+        png_path = slides_dir / f"slide_{slide_num:03d}.png"
+        
+        if jpg_path.exists():
+            img_src = f"slides/slide_{slide_num:03d}.jpg"
+        elif png_path.exists():
+            img_src = f"slides/slide_{slide_num:03d}.png"
+        else:
+            img_src = None
         
         html_parts.append(f'''
         <div class="slide-section">
@@ -438,8 +437,8 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
                 <div class="slide-num">슬라이드 {slide_num}</div>
 ''')
         
-        if img_base64:
-            html_parts.append(f'                <img src="data:image/png;base64,{img_base64}" class="slide-image" alt="슬라이드 {slide_num}">')
+        if img_src:
+            html_parts.append(f'                <img src="{img_src}" class="slide-image" alt="슬라이드 {slide_num}" loading="lazy">')
         
         html_parts.append('''            </div>
             <div class="slide-right">

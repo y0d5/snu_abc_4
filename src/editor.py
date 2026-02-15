@@ -9,8 +9,11 @@
 
 import streamlit as st
 import json
+import re
 from pathlib import Path
 import base64
+import io
+from PIL import Image as PILImage
 from streamlit_image_select import image_select
 from streamlit_sortables import sort_items
 
@@ -285,6 +288,9 @@ with header_col2:
         label_visibility="collapsed"
     )
 
+# 강의별 고유 위젯 키용 (특수문자 제거)
+safe_lecture_key = re.sub(r'[^\w\-]', '_', selected_lecture)
+
 with header_col1:
     # 편집 중인 슬라이드 수 표시
     edit_count = len([k for k in st.session_state.get('slide_edits', {}).keys() if k.startswith(selected_lecture + '_')]) if 'slide_edits' in st.session_state else 0
@@ -297,8 +303,12 @@ with header_col1:
 if 'data' not in st.session_state or st.session_state.get('current_lecture') != selected_lecture:
     st.session_state.data = load_lecture_data(selected_lecture)
     st.session_state.current_lecture = selected_lecture
-    # 강의 변경 시 편집 버퍼 초기화
+    # 강의 변경 시 편집 버퍼·슬라이드 선택·content 위젯 상태 초기화
     st.session_state.slide_edits = {}
+    st.session_state.selected_slide = 1
+    for key in list(st.session_state.keys()):
+        if key.startswith('content_'):
+            del st.session_state[key]
 
 data = st.session_state.data
 
@@ -308,10 +318,11 @@ with header_col3:
         if 'slide_edits' not in st.session_state:
             st.session_state.slide_edits = {}
         
+        content_prefix = f"content_{safe_lecture_key}_"
         for key in list(st.session_state.keys()):
-            if key.startswith('content_'):
+            if key.startswith(content_prefix):
                 try:
-                    s_num = int(key.replace('content_', ''))
+                    s_num = int(key.replace(content_prefix, ''))
                     edit_key = f"{selected_lecture}_{s_num}"
                     st.session_state.slide_edits[edit_key] = st.session_state[key]
                 except ValueError:
@@ -346,7 +357,7 @@ with header_col3:
         # 저장 후 편집 버퍼 및 content_ 키 초기화
         st.session_state.slide_edits = {}
         for key in list(st.session_state.keys()):
-            if key.startswith('content_'):
+            if key.startswith(f"content_{safe_lecture_key}_"):
                 del st.session_state[key]
         st.toast(f"저장되었습니다! (버전 {version_count}개 보관중)", icon="✅")
 
@@ -420,14 +431,25 @@ with tab1:
     # 슬라이드 선택
     num_slides = len(data['summaries'])
     
-    # 모든 슬라이드 이미지 경로 수집 (먼저 준비)
+    # 모든 슬라이드 이미지 수집: 썸네일(축소)로 전달 (메모리/경로 이슈 회피)
     slide_images = []
     slide_captions = []
+    slides_dir = OUTPUT_DIR / selected_lecture / "slides"
+    THUMB_WIDTH = 200  # 썸네일 폭 (px)
     for i in range(1, num_slides + 1):
-        img_path = OUTPUT_DIR / selected_lecture / "slides" / f"slide_{i:03d}.png"
+        img_path = slides_dir / f"slide_{i:03d}.png"
         if img_path.exists():
-            slide_images.append(str(img_path))
-            slide_captions.append(str(i))
+            try:
+                img = PILImage.open(img_path)
+                ratio = THUMB_WIDTH / img.width
+                thumb = img.resize((THUMB_WIDTH, int(img.height * ratio)))
+                buf = io.BytesIO()
+                thumb.save(buf, format="JPEG", quality=60)
+                b64 = base64.b64encode(buf.getvalue()).decode()
+                slide_images.append(f"data:image/jpeg;base64,{b64}")
+                slide_captions.append(str(i))
+            except Exception:
+                pass
     
     # 선택된 슬라이드 초기화
     if 'selected_slide' not in st.session_state:
@@ -444,23 +466,27 @@ with tab1:
         with thumb_container:
             # 이미지 선택 컴포넌트 - 선택 시 자동 반영 (rerun 없음)
             if slide_images:
-                selected_path = image_select(
+                # 강의별로 고유한 키 사용 (강의 전환 시 위젯 상태 초기화)
+                slide_selector_key = "slide_selector_" + re.sub(r'[^\w\-]', '_', selected_lecture)
+                slide_index = min(st.session_state.selected_slide - 1, len(slide_images) - 1)
+                selected_idx = image_select(
                     label="",
                     images=slide_images,
                     captions=slide_captions,
-                    index=st.session_state.selected_slide - 1,
+                    index=slide_index,
                     use_container_width=True,
-                    key="slide_selector"
+                    return_value="index",
+                    key=slide_selector_key
                 )
                 
-                # 선택된 이미지에서 슬라이드 번호 추출
-                if selected_path in slide_images:
-                    new_slide_num = slide_images.index(selected_path) + 1
+                # 선택된 이미지에서 슬라이드 번호 추출 (index는 0-based)
+                if isinstance(selected_idx, int) and 0 <= selected_idx < len(slide_images):
+                    new_slide_num = selected_idx + 1
                     prev_slide_num = st.session_state.selected_slide
                     
                     # 슬라이드 변경 시 이전 슬라이드의 편집 내용 저장
                     if new_slide_num != prev_slide_num:
-                        prev_content_key = f"content_{prev_slide_num}"
+                        prev_content_key = f"content_{safe_lecture_key}_{prev_slide_num}"
                         if prev_content_key in st.session_state:
                             prev_edit_key = f"{selected_lecture}_{prev_slide_num}"
                             if 'slide_edits' not in st.session_state:
@@ -490,17 +516,20 @@ with tab1:
             st.session_state.slide_edits = {}
         
         # 모든 content_ 키에서 slide_edits로 동기화 (슬라이드 변경 시 이전 편집 내용 보존)
+        content_prefix = f"content_{safe_lecture_key}_"
         for key in list(st.session_state.keys()):
-            if key.startswith('content_'):
+            if key.startswith(content_prefix):
                 try:
-                    s_num = int(key.replace('content_', ''))
+                    s_num = int(key.replace(content_prefix, ''))
                     sync_edit_key = f"{selected_lecture}_{s_num}"
                     st.session_state.slide_edits[sync_edit_key] = st.session_state[key]
                 except ValueError:
                     pass
         
         # 현재 슬라이드 데이터
-        slide_idx = slide_num - 1
+        slide_idx = min(slide_num - 1, len(data['summaries']) - 1)
+        if slide_idx < 0:
+            slide_idx = 0
         current_summary = data['summaries'][slide_idx]
         
         st.markdown(f"**슬라이드 {slide_num} 주요 내용**")
@@ -520,7 +549,7 @@ with tab1:
             "주요 내용 편집",
             value=initial_value,
             height=400,
-            key=f"content_{slide_num}",
+            key=f"content_{safe_lecture_key}_{slide_num}",
             label_visibility="collapsed",
             placeholder="포인트 1\n\n포인트 2\n\n포인트 3\n\n(빈 줄로 포인트 구분)"
         )

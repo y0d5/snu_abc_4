@@ -50,11 +50,12 @@ def time_based_matching(
     total_duration_seconds: int
 ) -> list[SlideMatch]:
     """
-    1차: 시간 기반 균등 분할 매칭
-    
-    전체 강의 시간을 슬라이드 수로 나눠서 각 발화를 해당 시간대의 슬라이드에 배정
+    1차: 페이지 번호 우선, 없으면 시간 기반 균등 분할 매칭
+
+    - STT에 slide_num(페이지 번호)이 있으면 해당 슬라이드에 직접 배정 (우선)
+    - 없으면 기존처럼 시간대 기반으로 배정
     """
-    print("\n[3-1] 시간 기반 균등 분할 매칭")
+    print("\n[3-1] 슬라이드-STT 매칭 (페이지 번호 우선, 시간 기반 보조)")
     
     num_slides = len(slides_info)
     utterances = stt_data.get("utterances", [])
@@ -63,14 +64,18 @@ def time_based_matching(
         print("   ⚠️ 발화 데이터가 없습니다.")
         return []
     
-    # 마지막 발화 시간을 기준으로 (더 정확함)
+    # 페이지 번호가 있는 발화 수
+    page_annotated = sum(1 for u in utterances if u.get("slide_num"))
+    if page_annotated:
+        print(f"   📌 페이지 번호가 있는 발화: {page_annotated}개 (우선 매칭)")
+    
+    # 마지막 발화 시간을 기준으로 (시간 기반 매칭용)
     last_utterance_time = max(u["seconds"] for u in utterances)
-    time_per_slide = last_utterance_time / num_slides
+    time_per_slide = last_utterance_time / num_slides if num_slides else 1
     
     print(f"   총 슬라이드: {num_slides}개")
     print(f"   총 발화: {len(utterances)}개")
     print(f"   마지막 발화 시간: {last_utterance_time}초")
-    print(f"   슬라이드당 예상 시간: {time_per_slide:.1f}초")
     
     # 슬라이드별 매칭 초기화
     matches = []
@@ -83,11 +88,19 @@ def time_based_matching(
         )
         matches.append(match)
     
-    # 각 발화를 시간대에 맞는 슬라이드에 배정
+    # 각 발화를 슬라이드에 배정
     for utterance in utterances:
-        seconds = utterance["seconds"]
-        # 어느 슬라이드에 해당하는지 계산
-        slide_idx = min(int(seconds / time_per_slide), num_slides - 1)
+        slide_idx = None
+        slide_num = utterance.get("slide_num")
+        
+        # 1) 페이지 번호가 있으면 해당 슬라이드에 배정 (1-based → 0-based)
+        if slide_num is not None and 1 <= slide_num <= num_slides:
+            slide_idx = slide_num - 1
+        # 2) 없으면 시간 기반 배정
+        if slide_idx is None:
+            seconds = utterance["seconds"]
+            slide_idx = min(int(seconds / time_per_slide), num_slides - 1) if num_slides else 0
+        
         matches[slide_idx].utterances.append(utterance)
     
     # 통계 출력
@@ -161,11 +174,18 @@ def verify_single_match(
 ) -> dict:
     """단일 슬라이드-발화 매칭 검증"""
     
-    # 발화 내용 요약
-    utterance_text = "\n".join([
-        f"[{u['timestamp']}] {u['speaker']}: {u['content'][:200]}"
-        for u in match.utterances[:5]  # 최대 5개만
-    ])
+    # 발화 내용 요약 (페이지 번호 힌트 포함)
+    utterance_lines = []
+    page_hint_utterances = []
+    for u in match.utterances[:5]:  # 최대 5개만
+        line = f"[{u['timestamp']}] {u['speaker']}: {u['content'][:200]}"
+        utterance_lines.append(line)
+        if u.get("slide_num"):
+            page_hint_utterances.append(f"  - {u['timestamp']} 발화: 원본 STT에서 슬라이드 {u['slide_num']}번으로 표시됨")
+    utterance_text = "\n".join(utterance_lines)
+    page_hint_block = ""
+    if page_hint_utterances:
+        page_hint_block = "\n## STT 페이지 번호 정보 (우선 고려):\n" + "\n".join(page_hint_utterances) + "\n"
     
     # 인접 슬라이드 정보
     slide_idx = match.slide_num - 1
@@ -174,7 +194,7 @@ def verify_single_match(
     
     prompt = f"""당신은 강의 슬라이드와 강연 내용을 매칭하는 전문가입니다.
 
-현재 슬라이드 {match.slide_num}번에 다음 발화들이 배정되어 있습니다.
+현재 슬라이드 {match.slide_num}번에 다음 발화들이 배정되어 있습니다.{page_hint_block}
 
 ## 슬라이드 {match.slide_num} 텍스트:
 {match.slide_text[:500] if match.slide_text else "(텍스트 없음)"}
@@ -187,6 +207,7 @@ def verify_single_match(
 
 ## 다음 슬라이드 ({match.slide_num + 1}번) 텍스트:
 {next_slide_text[:200] if next_slide_text else "(없음)"}
+{"\n**STT에 페이지 번호가 표시된 발화는 원본 녹음에서 해당 슬라이드로 기록된 것이므로, 그 정보를 우선적으로 신뢰해주세요.**" if page_hint_utterances else ""}
 
 이 발화들이 현재 슬라이드에 적절하게 매칭되었는지 판단해주세요.
 

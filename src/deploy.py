@@ -44,7 +44,7 @@ def get_lecture_info(folder_name):
 
 
 def copy_lecture_to_site(lecture_folder):
-    """강의 폴더를 site로 복사 (HTML과 슬라이드만)"""
+    """강의 폴더를 site로 복사 (HTML과 슬라이드만, PNG→JPEG 압축)"""
     src_dir = OUTPUT_DIR / lecture_folder
     dest_dir = SITE_DIR / lecture_folder
     
@@ -58,13 +58,62 @@ def copy_lecture_to_site(lecture_folder):
     for html_file in src_dir.glob("*.html"):
         shutil.copy2(html_file, dest_dir / html_file.name)
     
-    # slides 폴더 복사
+    # slides 폴더 복사 (PNG → JPEG 압축 변환)
     slides_src = src_dir / "slides"
     if slides_src.exists():
         slides_dest = dest_dir / "slides"
-        shutil.copytree(slides_src, slides_dest)
+        slides_dest.mkdir(parents=True, exist_ok=True)
+        compress_slides_to_jpeg(slides_src, slides_dest)
     
     return dest_dir
+
+
+def compress_slides_to_jpeg(src_dir, dest_dir, quality=85, max_width=1920):
+    """슬라이드 PNG 이미지를 JPEG로 압축 변환 (GitHub 파일 크기 제한 대응)"""
+    try:
+        from PIL import Image as PILImage
+    except ImportError:
+        print("   ⚠️ Pillow 미설치 - PNG 원본 복사")
+        shutil.copytree(src_dir, dest_dir, dirs_exist_ok=True)
+        return
+    
+    png_files = sorted(src_dir.glob("*.png"))
+    total = len(png_files)
+    
+    for i, png_path in enumerate(png_files):
+        jpg_name = png_path.stem + ".jpg"
+        jpg_path = dest_dir / jpg_name
+        
+        try:
+            img = PILImage.open(png_path)
+            
+            # RGBA → RGB 변환 (JPEG는 알파 채널 미지원)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = PILImage.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if 'A' in img.mode else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # 너무 큰 이미지는 리사이즈
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_height = int(img.height * ratio)
+                img = img.resize((max_width, new_height), PILImage.LANCZOS)
+            
+            img.save(jpg_path, 'JPEG', quality=quality, optimize=True)
+            
+        except Exception as e:
+            # 변환 실패 시 원본 PNG 복사
+            print(f"   ⚠️ {png_path.name} 변환 실패: {e}, 원본 복사")
+            shutil.copy2(png_path, dest_dir / png_path.name)
+        
+        if (i + 1) % 20 == 0 or (i + 1) == total:
+            print(f"   → 슬라이드 압축: {i + 1}/{total}")
+    
+    print(f"   ✅ {total}개 슬라이드 JPEG 압축 완료")
 
 
 def generate_index_page():
@@ -165,6 +214,15 @@ def generate_index_page():
             padding: 40px 20px;
             color: #666;
         }}
+        .copyright-notice {{
+            font-size: 0.8em;
+            color: #666;
+            line-height: 1.5;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }}
         footer {{
             text-align: center;
             margin-top: 30px;
@@ -177,6 +235,7 @@ def generate_index_page():
     <div class="container">
         <header>
             <h1>서울대학교 빅데이터 AI CEO 과정 4기 - 강의 노트</h1>
+            <p class="copyright-notice">본 웹페이지의 모든 강의 자료 및 요약본은 서울대 빅데이터 AI CEO 과정(SNU ABC) 4기의 소중한 학술 자산입니다. 교수님들의 지적 재산권 보호를 위해 외부 유출 및 무단 전재를 엄격히 금지합니다.</p>
         </header>
         
         <div class="lecture-list">
