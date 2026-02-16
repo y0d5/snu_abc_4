@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-GitHub Pages 배포 스크립트
-- output 폴더의 강의 노트를 site 폴더로 복사
+강의 노트 배포 스크립트
+- output 폴더의 강의 노트를 docs 폴더로 복사
 - 인덱스 페이지 자동 생성
-- Git commit & push
+- Netlify 배포 (또는 로컬 폴더 내보내기)
 """
 
 import shutil
@@ -54,9 +54,11 @@ def copy_lecture_to_site(lecture_folder):
     
     dest_dir.mkdir(parents=True, exist_ok=True)
     
-    # HTML 파일 복사
+    # HTML 파일 복사 (이미지 경로 .png → .jpg 치환)
     for html_file in src_dir.glob("*.html"):
-        shutil.copy2(html_file, dest_dir / html_file.name)
+        content = html_file.read_text(encoding='utf-8')
+        content = content.replace('.png"', '.jpg"').replace(".png'", ".jpg'")
+        (dest_dir / html_file.name).write_text(content, encoding='utf-8')
     
     # slides 폴더 복사 (PNG → JPEG 압축 변환)
     slides_src = src_dir / "slides"
@@ -68,7 +70,7 @@ def copy_lecture_to_site(lecture_folder):
     return dest_dir
 
 
-def compress_slides_to_jpeg(src_dir, dest_dir, quality=85, max_width=1920):
+def compress_slides_to_jpeg(src_dir, dest_dir, quality=82, max_width=1280):
     """슬라이드 PNG 이미지를 JPEG로 압축 변환 (GitHub 파일 크기 제한 대응)"""
     try:
         from PIL import Image as PILImage
@@ -270,10 +272,10 @@ def generate_index_page():
 
 
 def deploy_to_site():
-    """전체 배포 프로세스"""
-    print("🚀 GitHub Pages 배포 시작...")
+    """전체 배포 프로세스 (docs 폴더 생성)"""
+    print("🚀 강의 노트 배포 준비 시작...")
     
-    # site 폴더 생성
+    # docs 폴더 생성
     SITE_DIR.mkdir(exist_ok=True)
     
     # 각 강의 폴더 복사
@@ -291,53 +293,55 @@ def deploy_to_site():
     (SITE_DIR / "index.html").write_text(index_html, encoding='utf-8')
     
     print(f"✅ {lecture_count}개 강의 노트 준비 완료!")
+    print(f"📂 배포 폴더: {SITE_DIR}")
     return lecture_count
 
 
-def git_push():
-    """Git commit & push"""
-    print("\n📤 GitHub에 업로드 중...")
+def netlify_deploy(production=False):
+    """Netlify 배포"""
+    print("\n📤 Netlify에 배포 중...")
     
     try:
-        # site 폴더 추가
-        subprocess.run(["git", "add", "docs/"], cwd=PROJECT_ROOT, check=True)
-        
-        # 변경사항 확인
+        # netlify-cli 설치 확인
         result = subprocess.run(
-            ["git", "status", "--porcelain", "docs/"],
-            cwd=PROJECT_ROOT,
-            capture_output=True,
-            text=True
+            ["which", "netlify"],
+            capture_output=True, text=True
         )
+        if result.returncode != 0:
+            print("⚠️  Netlify CLI가 설치되어 있지 않습니다.")
+            print("   설치: npm install -g netlify-cli")
+            print("   로그인: netlify login")
+            return False
         
-        if not result.stdout.strip():
-            print("ℹ️  변경사항이 없습니다.")
+        # 배포 명령어
+        cmd = ["netlify", "deploy", "--dir", str(SITE_DIR)]
+        if production:
+            cmd.append("--prod")
+            print("   🔴 프로덕션 배포")
+        else:
+            print("   🟡 미리보기 배포 (--prod 없이)")
+        
+        result = subprocess.run(cmd, cwd=PROJECT_ROOT)
+        
+        if result.returncode == 0:
+            print("✅ Netlify 배포 완료!")
             return True
+        else:
+            print("❌ Netlify 배포 실패")
+            return False
         
-        # 커밋
-        commit_msg = f"강의 노트 업데이트 - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        subprocess.run(
-            ["git", "commit", "-m", commit_msg],
-            cwd=PROJECT_ROOT,
-            check=True
-        )
-        
-        # 푸시
-        subprocess.run(["git", "push"], cwd=PROJECT_ROOT, check=True)
-        
-        print("✅ GitHub 업로드 완료!")
-        return True
-        
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Git 오류: {e}")
+    except Exception as e:
+        print(f"❌ 배포 오류: {e}")
         return False
 
 
-def full_deploy():
-    """전체 배포 (site 생성 + git push)"""
+def full_deploy(production=False):
+    """전체 배포 (docs 폴더 생성 + Netlify 배포)"""
     deploy_to_site()
-    return git_push()
+    return netlify_deploy(production=production)
 
 
 if __name__ == "__main__":
-    full_deploy()
+    import sys
+    prod = "--prod" in sys.argv
+    full_deploy(production=prod)

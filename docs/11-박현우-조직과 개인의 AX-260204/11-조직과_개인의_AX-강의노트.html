@@ -145,6 +145,78 @@
             font-size: 0.85em;
         }
         
+        /* 슬라이드 클릭 확대 (라이트박스) */
+        .slide-image {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .slide-image:hover {
+            opacity: 0.85;
+        }
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .lightbox-overlay.active {
+            display: flex;
+        }
+        .lightbox-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            line-height: 1;
+        }
+        .lightbox-close:hover {
+            color: #ccc;
+        }
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            user-select: none;
+            padding: 10px;
+            line-height: 1;
+        }
+        .lightbox-nav:hover {
+            color: #ccc;
+        }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        .lightbox-caption {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.95em;
+            z-index: 10000;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+        
         /* 반응형: 작은 화면에서는 세로 배치 */
         @media (max-width: 768px) {
             .slide-section {
@@ -159,6 +231,14 @@
     </style>
 </head>
 <body>
+    <!-- 라이트박스 오버레이 -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="navLightbox(event, -1)">&#8249;</span>
+        <img id="lightbox-img" src="" alt="">
+        <span class="lightbox-nav lightbox-next" onclick="navLightbox(event, 1)">&#8250;</span>
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
     <div class="container">
         <header>
             <h1>조직과 개인의 AX</h1>
@@ -170,7 +250,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 1</div>
-                <img src="slides/slide_001.png" class="slide-image" alt="슬라이드 1" loading="lazy">            </div>
+                <img src="slides/slide_001.jpg" class="slide-image" alt="슬라이드 1" loading="lazy" onclick="openLightbox('slides/slide_001.jpg', 1)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 트랜스포메이션(AX)은 조직과 개인이 AI 기술을 도입하여 변화하는 과정을 의미한다</li>                    <li>이전 시간에는 LLM 등 AI 기술 자체에 대한 이해를 다뤘고, 이번에는 실제 적용 방안을 다룬다</li>                    <li>강의는 두 부분으로 구성: 조직의 AI 트랜스포메이션 시작점과 개인의 AI 워크플로우 활용법</li>                    <li>조직 차원에서 AI 도입을 어디서부터 시작해야 하는지에 대한 실무적 접근을 제시한다</li>                    <li>개인 차원에서는 실제 AI 활용 사례와 베스트 프랙티스를 공유하여 실질적 도움을 제공한다</li>                </ul>            </div>
         </div>
@@ -178,7 +258,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 2</div>
-                <img src="slides/slide_002.png" class="slide-image" alt="슬라이드 2" loading="lazy">            </div>
+                <img src="slides/slide_002.jpg" class="slide-image" alt="슬라이드 2" loading="lazy" onclick="openLightbox('slides/slide_002.jpg', 2)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>강의는 총 2개 세션으로 구성되며 각각 90분씩 진행된다</li>                    <li>첫 번째 세션은 'AI 트랜스포메이션의 시작점 - 문서 vs 데이터'를 주제로 한다</li>                    <li>두 번째 세션은 '개인의 AI 활용 - GUI에서 CLI로'를 다룬다</li>                    <li>각 세션은 강의(30-40분), 그룹 토론(20분), 전체 공유(20분)으로 구성된다</li>                    <li>AI 조직 변화의 시작점을 문서와 데이터를 분리하여 접근하는 관점으로 제시한다</li>                </ul>            </div>
         </div>
@@ -186,7 +266,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 3</div>
-                <img src="slides/slide_003.png" class="slide-image" alt="슬라이드 3" loading="lazy">            </div>
+                <img src="slides/slide_003.jpg" class="slide-image" alt="슬라이드 3" loading="lazy" onclick="openLightbox('slides/slide_003.jpg', 3)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>ChatGPT 등장 이후 Stack Overflow와 GitHub의 트래픽 변화가 극명하게 대조됨</li>                    <li>Stack Overflow는 프로그래머들의 지식인 역할을 하는 질문-답변 플랫폼</li>                    <li>Stack Overflow에서 사용자들이 프로그래밍 질문을 올리면 다른 사용자들이 코드 예제와 함께 답변을 제공하는 구조</li>                    <li>Stack Overflow의 정보들이 현재 LLM(Large Language Model) 학습을 위한 데이터로 활용됨</li>                </ul>            </div>
         </div>
@@ -194,7 +274,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 4</div>
-                <img src="slides/slide_004.png" class="slide-image" alt="슬라이드 4" loading="lazy">            </div>
+                <img src="slides/slide_004.jpg" class="slide-image" alt="슬라이드 4" loading="lazy" onclick="openLightbox('slides/slide_004.jpg', 4)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Git은 문서의 버전을 관리해주는 프로그램이다</li>                    <li>기존의 파일명 변경 방식('최종', '파이널' 등)은 비효율적인 버전 관리 방법이다</li>                    <li>Git은 전문적인 버전 관리를 위해 개발된 소프트웨어이다</li>                    <li>GitHub는 Git 저장소를 온라인에 저장할 수 있게 해주는 서비스이다</li>                </ul>            </div>
         </div>
@@ -202,7 +282,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 5</div>
-                <img src="slides/slide_005.png" class="slide-image" alt="슬라이드 5" loading="lazy">            </div>
+                <img src="slides/slide_005.jpg" class="slide-image" alt="슬라이드 5" loading="lazy" onclick="openLightbox('slides/slide_005.jpg', 5)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Stack Overflow는 2025년 기준 질문 수가 전년 대비 78% 감소하여 월 3,862개까지 줄어들었다</li>                    <li>2014년 월 200,000개 질문에서 2025년 3,862개로 급격히 감소한 상황이다</li>                    <li>개발자의 84%가 AI 도구를 사용하여 개발하고 있다는 설문조사 결과가 나왔다</li>                    <li>Stack Overflow의 몰락 원인은 레거시 미디어 구조와 문서 중심 플랫폼, AI가 접근하기 어려운 형식 때문이다</li>                    <li>AI 도구의 보편화로 인해 기존 Q&A 플랫폼의 역할이 크게 축소되었다</li>                </ul>            </div>
         </div>
@@ -210,7 +290,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 6</div>
-                <img src="slides/slide_006.png" class="slide-image" alt="슬라이드 6" loading="lazy">            </div>
+                <img src="slides/slide_006.jpg" class="slide-image" alt="슬라이드 6" loading="lazy" onclick="openLightbox('slides/slide_006.jpg', 6)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>GitHub는 텍스트 파일 기반의 코드 저장소로 AI가 읽고 쓸 수 있는 구조를 가지고 있어 AI 시대에 급성장했다</li>                    <li>Stack Overflow 중심의 개발자 워크플로우가 GitHub 중심으로 재편되면서 AI 트랜스포메이션이 발생했다</li>                    <li>GitHub Copilot의 폭발적 성장으로 68% 개발자가 사용하며 AI 시대의 핵심 인프라가 되었다</li>                    <li>조직의 AI 트랜스포메이션을 위해서는 Stack Overflow 같은 구조에서 GitHub 같은 구조로 작업 방식을 바꿔야 한다</li>                    <li>문서와 데이터를 분리해서 생각하는 것이 AI 트랜스포메이션의 중요한 출발점이다</li>                </ul>            </div>
         </div>
@@ -218,7 +298,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 7</div>
-                <img src="slides/slide_007.png" class="slide-image" alt="슬라이드 7" loading="lazy">            </div>
+                <img src="slides/slide_007.jpg" class="slide-image" alt="슬라이드 7" loading="lazy" onclick="openLightbox('slides/slide_007.jpg', 7)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>모든 조직의 워크플로우와 프로세스는 조직에서 작성하고 소비하는 문서에 담겨 있다</li>                    <li>전통적인 종이 문서는 내용과 형식이 하나로 합쳐져 있는 특성을 가진다</li>                    <li>종이 문서에서는 내용(데이터)과 형식(표현)이 임베드되어 분리하기 어렵다</li>                    <li>문서에서 순수한 내용이나 데이터만을 추출하는 것은 매우 어려운 작업이었다</li>                </ul>            </div>
         </div>
@@ -226,7 +306,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 8</div>
-                <img src="slides/slide_008.png" class="slide-image" alt="슬라이드 8" loading="lazy">            </div>
+                <img src="slides/slide_008.jpg" class="slide-image" alt="슬라이드 8" loading="lazy" onclick="openLightbox('slides/slide_008.jpg', 8)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>종이 문서에서는 인간이 시각적 처리(비전 프로세싱)를 통해 내용과 형식을 분리했다</li>                    <li>컴퓨터 등장 후 문서의 생성과 소비 방식이 디지털로 전환되었다</li>                    <li>인터넷은 문서를 공유하고 열람하기 위한 목적으로 시작되었다</li>                    <li>HTML은 하이퍼텍스트 마크업 언어로, 문서 간 연결이 가능한 하이퍼텍스트 구조를 정의하는 표준이다</li>                    <li>웹 브라우저에서 문서를 표시하기 위해 HTML 표준을 따라 문서를 작성하게 되었다</li>                </ul>            </div>
         </div>
@@ -234,7 +314,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 9</div>
-                <img src="slides/slide_009.png" class="slide-image" alt="슬라이드 9" loading="lazy">            </div>
+                <img src="slides/slide_009.jpg" class="slide-image" alt="슬라이드 9" loading="lazy" onclick="openLightbox('slides/slide_009.jpg', 9)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>종이 시대의 문서는 내용과 형식이 완전히 결합된 아말감 형태였다</li>                    <li>초기 HTML에서는 b태그, i태그, font태그 등 시각적 표현을 위한 태그들이 먼저 개발되었다</li>                    <li>HTML 초기에는 마크업을 통해 굵게, 이탤릭, 색상 변경 등의 형식 지정이 가능했다</li>                    <li>웹 문서의 복잡성 증가로 인해 내용과 스타일 관리가 어려워졌다</li>                    <li>HTML 표준은 내용과 형식을 분리하고 시맨틱(의미) 태그 중심으로 발전하게 되었다</li>                </ul>            </div>
         </div>
@@ -242,7 +322,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 10</div>
-                <img src="slides/slide_010.png" class="slide-image" alt="슬라이드 10" loading="lazy">            </div>
+                <img src="slides/slide_010.jpg" class="slide-image" alt="슬라이드 10" loading="lazy" onclick="openLightbox('slides/slide_010.jpg', 10)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>초기 HTML에서는 <b>, <i>, <font> 태그처럼 시각적 표현을 직접 지정하는 방식을 사용했다</li>                    <li>HTML5 버전(약 10년 전)부터 <article>, <section>, <header> 등 의미론적 태그가 도입되었다</li>                    <li>의미론적 태그는 시각적 표현보다는 콘텐츠의 의미와 구조를 정의하는데 중점을 둔다</li>                    <li><article> 태그는 본문 내용을, <header> 태그는 문서의 머리글을 의미론적으로 구분한다</li>                    <li>HTML의 발전 방향은 형식과 내용이 뒤섞인 구조에서 의미 기반의 구조화된 마크업으로 변화했다</li>                </ul>            </div>
         </div>
@@ -250,7 +330,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 11</div>
-                <img src="slides/slide_011.png" class="slide-image" alt="슬라이드 11" loading="lazy">            </div>
+                <img src="slides/slide_011.jpg" class="slide-image" alt="슬라이드 11" loading="lazy" onclick="openLightbox('slides/slide_011.jpg', 11)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>HTML5와 CSS는 내용과 표현의 완전한 분리를 구현했다</li>                    <li>시맨틱 태그(article, section, header)는 의미만을 표현하고 스타일은 CSS로 분리한다</li>                    <li>하나의 내용을 여러 가지 방식으로 표현할 수 있게 되었다</li>                    <li>AI 시대에는 PDF 등의 문서에서 형식을 분리하고 내용만 추출하여 AI에 입력한다</li>                    <li>문서의 내용과 형식을 분리하는 개념이 AI와 문서의 관계에서도 동일하게 적용된다</li>                </ul>            </div>
         </div>
@@ -258,7 +338,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 12</div>
-                <img src="slides/slide_012.png" class="slide-image" alt="슬라이드 12" loading="lazy">            </div>
+                <img src="slides/slide_012.jpg" class="slide-image" alt="슬라이드 12" loading="lazy" onclick="openLightbox('slides/slide_012.jpg', 12)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI는 문서의 형식보다는 내용 자체를 중요하게 여긴다</li>                    <li>PDF 파일은 같은 내용을 담기에는 비효율적인 포맷이다</li>                    <li>AI는 텍스트 파일과 작업하는 것이 훨씬 효율적이다</li>                    <li>AI 시대에 마크다운과 같은 텍스트 기반 문서 작성 방식이 주목받고 있다</li>                </ul>            </div>
         </div>
@@ -266,7 +346,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 13</div>
-                <img src="slides/slide_013.png" class="slide-image" alt="슬라이드 13" loading="lazy">            </div>
+                <img src="slides/slide_013.jpg" class="slide-image" alt="슬라이드 13" loading="lazy" onclick="openLightbox('slides/slide_013.jpg', 13)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>HTML은 형식을 지정하기 위한 태그가 많아 내용 대비 형식 정보의 비율이 높다</li>                    <li>마크다운은 텍스트 파일에 간단한 약속(#, ##, 링크 표기법 등)을 통해 문서 구조를 표현한다</li>                    <li>마크다운은 사람이 읽기에 자연스러우면서 기계가 쉽게 읽을 수 있는 머신리더블 포맷이다</li>                    <li>AI는 형식 정보보다는 순수한 데이터와 내용만을 필요로 한다</li>                    <li>문서를 AI가 처리 가능한 구조화된 데이터 형태로 변환하는 것이 핵심이다</li>                </ul>            </div>
         </div>
@@ -274,7 +354,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 14</div>
-                <img src="slides/slide_014.png" class="slide-image" alt="슬라이드 14" loading="lazy">            </div>
+                <img src="slides/slide_014.jpg" class="slide-image" alt="슬라이드 14" loading="lazy" onclick="openLightbox('slides/slide_014.jpg', 14)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>마크다운은 읽기 쉬운 plain text와 최소한의 마크업 문자를 사용하는 철학을 가지고 있다</li>                    <li>마크다운은 시맨틱 기반 태깅으로 사람이 읽어도 자연스럽다</li>                    <li>AI가 읽기 가장 쉬운 형식이며 내용과 형식의 완벽한 분리가 가능하다</li>                    <li>마크다운은 HTML, PDF 등으로 변환이 쉽다는 장점이 있다</li>                    <li>웹 페이지에서 핵심 정보는 질문과 답변 내용이며, 나머지는 사용자가 보기 좋게 하기 위한 장식적 요소들이다</li>                </ul>            </div>
         </div>
@@ -282,7 +362,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 15</div>
-                <img src="slides/slide_015.png" class="slide-image" alt="슬라이드 15" loading="lazy">            </div>
+                <img src="slides/slide_015.jpg" class="slide-image" alt="슬라이드 15" loading="lazy" onclick="openLightbox('slides/slide_015.jpg', 15)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 시대 이후 웹사이트들이 robots.txt 파일을 도메인 루트에 배치하는 것이 관례가 되었다</li>                    <li>robots.txt 파일은 검색엔진 봇들에게 사이트 내에서 접근 가능한 페이지와 접근 금지 페이지를 안내하는 역할을 한다</li>                    <li>이 파일은 사람이 아닌 봇을 위해 만들어진 안내판 역할을 하며, 봇의 인덱싱 권한을 제어한다</li>                    <li>robots.txt의 규칙을 지킬지 여부는 봇 개발자의 선택이지만, 일반적으로 지키는 것이 관례화되어 있다</li>                </ul>            </div>
         </div>
@@ -290,7 +370,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 16</div>
-                <img src="slides/slide_016.png" class="slide-image" alt="슬라이드 16" loading="lazy">            </div>
+                <img src="slides/slide_016.jpg" class="slide-image" alt="슬라이드 16" loading="lazy" onclick="openLightbox('slides/slide_016.jpg', 16)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>robots.txt는 1994년 검색엔진 시대에 등장한 웹사이트 접근 지침 파일로, 도메인 루트에 위치한다</li>                    <li>검색엔진 로봇에게 접근 가능한 페이지와 금지된 페이지를 알려주는 역할을 한다</li>                    <li>법적 강제력은 없지만 상도덕으로 자리잡아 검색엔진들이 자발적으로 준수해왔다</li>                    <li>AI 시대에 접어들면서 LLM을 위한 새로운 파일 형태인 LLMS.TXT가 등장했다</li>                    <li>LLMS.TXT는 사이트 정보를 LLM이 읽기 좋게 마크다운 형태로 표현한 파일이다</li>                </ul>            </div>
         </div>
@@ -298,7 +378,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 17</div>
-                <img src="slides/slide_017.png" class="slide-image" alt="슬라이드 17" loading="lazy">            </div>
+                <img src="slides/slide_017.jpg" class="slide-image" alt="슬라이드 17" loading="lazy" onclick="openLightbox('slides/slide_017.jpg', 17)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>llms.txt는 LLM이 웹사이트를 효율적으로 읽을 수 있도록 HTML 태그 없이 간단한 포맷으로 제공하는 새로운 표준이다</li>                    <li>LLM이 웹사이트 정보를 가져올 때 토큰을 절약할 수 있도록 전용 엔드포인트를 제공한다</li>                    <li>마크다운 형식을 사용하여 문서의 각 부분에 의미를 부여하고 구조화된 정보를 제공한다</li>                    <li>LLM 시대에는 문서에서 불필요한 형식을 제거하고 AI가 읽기 좋은 방식으로 문서를 만드는 것이 중요하다</li>                    <li>2026년 현재 84만+ 웹사이트가 도입하고 Anthropic, Cloudflare, Stripe 등 주요 기업들이 채택하여 새로운 웹 표준으로 자리잡고 있다</li>                </ul>            </div>
         </div>
@@ -306,7 +386,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 18</div>
-                <img src="slides/slide_018.png" class="slide-image" alt="슬라이드 18" loading="lazy">            </div>
+                <img src="slides/slide_018.jpg" class="slide-image" alt="슬라이드 18" loading="lazy" onclick="openLightbox('slides/slide_018.jpg', 18)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>조직 내에서 사용하는 문서 형태에 대한 고민이 필요하다</li>                    <li>한국의 한글 파일이 AI에 문서를 제공하기 어렵다는 인식이 있었다</li>                    <li>HWPX는 XML 포맷으로 되어 있어 AI가 읽을 수 있다</li>                    <li>최신 AI는 바이너리 파일에서도 정보를 추출할 수 있는 능력을 갖추고 있다</li>                </ul>            </div>
         </div>
@@ -314,7 +394,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 19</div>
-                <img src="slides/slide_019.png" class="slide-image" alt="슬라이드 19" loading="lazy">            </div>
+                <img src="slides/slide_019.jpg" class="slide-image" alt="슬라이드 19" loading="lazy" onclick="openLightbox('slides/slide_019.jpg', 19)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>PDF 파일은 사람이 보기엔 좋지만 디지털 시대의 종이 문서와 같아서 AI가 내용을 추출하기 어렵다</li>                    <li>공문 등 기존 문서들은 보일러플레이트 코드처럼 불필요한 반복 내용이 많이 포함되어 있다</li>                    <li>AI가 읽기 쉬운 문서는 마크다운 기반으로 작성하는 것이 효율적이다</li>                    <li>데이터는 JSON이나 CSV 파일 등 포맷팅에 들어가는 글자 수가 적은 형태로 준비하는 것이 좋다</li>                    <li>슬랙 같은 소통 도구는 API를 통해 AI 워크플로우와 쉽게 연동할 수 있다</li>                </ul>            </div>
         </div>
@@ -322,7 +402,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 20</div>
-                <img src="slides/slide_020.png" class="slide-image" alt="슬라이드 20" loading="lazy">            </div>
+                <img src="slides/slide_020.jpg" class="slide-image" alt="슬라이드 20" loading="lazy" onclick="openLightbox('slides/slide_020.jpg', 20)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 트랜스폼을 위해서는 카카오워크, 네이버 웍스 같은 협업 플랫폼에서 데이터를 쉽게 추출할 수 있는 채널이 필요하다</li>                    <li>조직의 AI 트랜스폼 시작점을 찾기 위해 서울대 사례를 통해 문제점을 분석한다</li>                    <li>공문 중심의 업무 처리와 전자결재 시스템의 후진적인 도장 방식이 조직 혁신의 걸림돌이 된다</li>                </ul>            </div>
         </div>
@@ -330,7 +410,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 21</div>
-                <img src="slides/slide_021.png" class="slide-image" alt="슬라이드 21" loading="lazy">            </div>
+                <img src="slides/slide_021.jpg" class="slide-image" alt="슬라이드 21" loading="lazy" onclick="openLightbox('slides/slide_021.jpg', 21)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>HWP는 바이너리 파일 형식으로 AI가 직접 읽을 수 없어 변환 과정이 필요하지만 부정확함</li>                    <li>PDF는 내용과 형식이 코팅된 파일로 데이터 추출이 어렵고 구조 정보가 손실됨</li>                    <li>공문은 보일러플레이트가 실제 내용보다 많아 중요한 정보 추출이 어려움</li>                    <li>AI 트랜스포메이션의 핵심은 문서를 데이터로 변환하는 것</li>                    <li>문서는 사람이 보기 좋게 포장된 데이터 형태이므로 알맹이를 효과적으로 추출하는 것이 중요함</li>                </ul>            </div>
         </div>
@@ -338,7 +418,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 22</div>
-                <img src="slides/slide_022.png" class="slide-image" alt="슬라이드 22" loading="lazy">            </div>
+                <img src="slides/slide_022.jpg" class="slide-image" alt="슬라이드 22" loading="lazy" onclick="openLightbox('slides/slide_022.jpg', 22)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI가 읽기 쉬운 문서 형식으로는 Markdown(순수 텍스트, 구조 정보 명확)과 JSON/CSV(구조화된 데이터, 프로그래밍 가능) 등이 있다</li>                    <li>API가 있는 플랫폼(예: Slack)은 대화 기록을 JSON으로 추출 가능하여 AI 학습에 적합하지만, 카카오워크는 API가 제한적이어서 데이터 추출이 어렵다</li>                    <li>현재 많은 웹사이트들이 LLM 비친화적으로 구성되어 있어, 중요한 정보(저자명 등)가 이미지 속에 포함되어 기계가 파싱하기 어렵다</li>                    <li>소버린 AI 개념이 단순히 자국 모델 개발에만 국한될 것이 아니라 데이터 주권 관점에서도 검토되어야 한다는 문제를 제기했다</li>                </ul>            </div>
         </div>
@@ -346,7 +426,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 23</div>
-                <img src="slides/slide_023.png" class="slide-image" alt="슬라이드 23" loading="lazy">            </div>
+                <img src="slides/slide_023.jpg" class="slide-image" alt="슬라이드 23" loading="lazy" onclick="openLightbox('slides/slide_023.jpg', 23)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>서울대학교는 공문 기반 워크플로우와 PDF 서류 시스템을 사용하고 있어 AI가 내용 추출하기 어려운 상황</li>                    <li>현재 시스템은 보일러플레이트가 많고 자동화가 불가능하며 데이터 전환 비용이 매우 높음</li>                    <li>AI 트랜스포메이션을 위해서는 문서를 데이터로 변환하고 워크플로우를 재설계해야 함</li>                    <li>외국 회사 모델이 아닌 독자적 모델 개발의 중요성(모델 주권)</li>                    <li>산업 AI 적용에서 모델보다 데이터 관련 주권이 더 중요할 수 있음</li>                </ul>            </div>
         </div>
@@ -354,7 +434,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 24</div>
-                <img src="slides/slide_024.png" class="slide-image" alt="슬라이드 24" loading="lazy">            </div>
+                <img src="slides/slide_024.jpg" class="slide-image" alt="슬라이드 24" loading="lazy" onclick="openLightbox('slides/slide_024.jpg', 24)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>팔란티어와 SAP 등 외국 기업의 AI 솔루션 도입 시 기업이 해당 시스템에 종속될 위험성이 존재한다</li>                    <li>제조 현장의 노하우와 데이터가 외부 채널을 통해 해외로 유출될 우려가 있다</li>                    <li>제조 데이터는 국가와 기업의 전략 자산이므로 데이터 주권(Data Sovereignty)에 대한 고려가 필요하다</li>                    <li>조직 내에서 보호해야 할 핵심 데이터와 공유 가능한 데이터를 구분하는 전략이 필요하다</li>                    <li>AI 시대에는 문서의 내용과 형식을 명확히 분리하여 접근해야 한다</li>                </ul>            </div>
         </div>
@@ -362,7 +442,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 25</div>
-                <img src="slides/slide_025.png" class="slide-image" alt="슬라이드 25" loading="lazy">            </div>
+                <img src="slides/slide_025.jpg" class="slide-image" alt="슬라이드 25" loading="lazy" onclick="openLightbox('slides/slide_025.jpg', 25)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>소버린 AI는 모델 소버린티에서 데이터 소버린티로 패러다임이 변화하고 있다</li>                    <li>Llama3, Qwen 등 오픈 웨이트 모델의 확산으로 고성능 모델을 무료로 사용할 수 있게 되어 모델 개발 경쟁의 의미가 퇴색되었다</li>                    <li>양질의 도메인 특화 데이터와 조직 내부의 암묵지가 AI 시대의 진짜 경쟁력이 되었다</li>                    <li>조직의 문서를 AI가 사용하기 쉬운 데이터로 전환하는 방법에 대한 그룹 토론을 진행할 예정이다</li>                    <li>AI 서비스들이 빌딩 블록처럼 조합되어 폭발적으로 새로운 서비스를 만들어내는 시대에 있다</li>                </ul>            </div>
         </div>
@@ -370,7 +450,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 26</div>
-                <img src="slides/slide_026.png" class="slide-image" alt="슬라이드 26" loading="lazy">            </div>
+                <img src="slides/slide_026.jpg" class="slide-image" alt="슬라이드 26" loading="lazy" onclick="openLightbox('slides/slide_026.jpg', 26)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한국 제조업은 2025년 슈퍼사이클에서 반도체 22.2%, 조선 24.9% 성장이 예상되는 하드웨어 강국이다</li>                    <li>데이터 관리 역량은 답보 상태이며 외산 플랫폼 의존도가 급증하고 있다</li>                    <li>하드웨어로 창출한 부가가치가 소프트웨어 사용료로 해외에 유출되고 있다</li>                    <li>하드웨어 위상이 소프트웨어 한계에 갇혀 있고 데이터 주권이 없는 상태이다</li>                    <li>AI 활용에서 조합 공간(디자인 스페이스) 내에서 베스트 프랙티스를 찾는 것이 중요한 과제이다</li>                </ul>            </div>
         </div>
@@ -378,7 +458,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 27</div>
-                <img src="slides/slide_027.png" class="slide-image" alt="슬라이드 27" loading="lazy">            </div>
+                <img src="slides/slide_027.jpg" class="slide-image" alt="슬라이드 27" loading="lazy" onclick="openLightbox('slides/slide_027.jpg', 27)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>팔란티어와 SAP의 2024년 전략적 제휴로 강력한 통합 AI 솔루션이 형성되었다</li>                    <li>낮은 진입 비용의 SaaS 방식으로 시작하여 점진적으로 플랫폼 락인을 유도하는 기술 종속 메커니즘을 활용한다</li>                    <li>사용자는 GUI 웹 브라우저 환경에서 대부분의 시간을 보내며 이는 인간을 위한 그래피컬 인터페이스이다</li>                    <li>컴퓨터와의 순수한 데이터 기반 소통은 터미널의 텍스트 방식이 더 효율적이다</li>                    <li>AI는 본래 GUI 형태를 볼 수 없어 인간과 다른 방식으로 컴퓨터와 상호작용한다</li>                </ul>            </div>
         </div>
@@ -386,7 +466,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 28</div>
-                <img src="slides/slide_028.png" class="slide-image" alt="슬라이드 28" loading="lazy">            </div>
+                <img src="slides/slide_028.jpg" class="slide-image" alt="슬라이드 28" loading="lazy" onclick="openLightbox('slides/slide_028.jpg', 28)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한국 제조업의 핵심 경쟁력은 숙련공의 미세한 감각과 오랜 경험에서 나오는 암묵지에 있음</li>                    <li>용접 시 각도, 속도, 느낌 등 매뉴얼화가 불가능한 암묵지가 핵심 노하우를 구성함</li>                    <li>AI 전환 과정에서 암묵지가 센서와 기록을 통해 디지털 데이터로 변환되어 해외 클라우드로 실시간 전송됨</li>                    <li>우리의 핵심 노하우가 AI 학습 데이터가 되어 경쟁사와 후발국도 같은 AI를 사용할 수 있게 되는 역설적 상황 발생</li>                    <li>한국의 암묵지 유출로 인해 우리의 핵심 노하우가 경쟁국 AI 학습의 재료가 되는 위험성 경고</li>                </ul>            </div>
         </div>
@@ -394,7 +474,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 29</div>
-                <img src="slides/slide_029.png" class="slide-image" alt="슬라이드 29" loading="lazy">            </div>
+                <img src="slides/slide_029.jpg" class="slide-image" alt="슬라이드 29" loading="lazy" onclick="openLightbox('slides/slide_029.jpg', 29)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Stack Overflow에서 GitHub로의 전환은 문서에서 데이터로의 패러다임 변화를 나타내며 이는 현대의 생존 조건이 됨</li>                    <li>내용과 형식의 분리는 역사적으로 지속된 패턴이며 AI 시대에도 동일하게 적용됨</li>                    <li>Markdown은 최소 마크업, 시맨틱 태깅, AI 친화적 특성으로 인해 중요성이 부각됨</li>                    <li>llms.txt는 84만 개 이상의 사이트에서 채택된 AI 시대의 새로운 웹 표준으로 등장</li>                    <li>데이터 소버린티 개념에서 모델보다 데이터가 더 중요한 요소로 인식됨</li>                </ul>            </div>
         </div>
@@ -402,7 +482,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 30</div>
-                <img src="slides/slide_030.png" class="slide-image" alt="슬라이드 30" loading="lazy">            </div>
+                <img src="slides/slide_030.jpg" class="slide-image" alt="슬라이드 30" loading="lazy" onclick="openLightbox('slides/slide_030.jpg', 30)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>타이핑 마인드는 다양한 AI 모델들을 통합된 인터페이스로 제공하는 유틸리티 툴이다</li>                    <li>OpenAI, Anthropic, Google 등 여러 회사의 AI 모델을 하나의 플랫폼에서 사용할 수 있다</li>                    <li>Perplexity 같은 다른 AI 모델들도 동일한 인터페이스를 통해 접근 가능하다</li>                    <li>플러그인과 MCP(Model Context Protocol) 기능을 지원하여 확장성을 제공한다</li>                </ul>            </div>
         </div>
@@ -410,7 +490,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 31</div>
-                <img src="slides/slide_031.png" class="slide-image" alt="슬라이드 31" loading="lazy">            </div>
+                <img src="slides/slide_031.jpg" class="slide-image" alt="슬라이드 31" loading="lazy" onclick="openLightbox('slides/slide_031.jpg', 31)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>이메일 답장 작성 시 받은 이메일을 AI에 통째로 복사하여 답장 드래프트를 요청하는 실용적 활용법을 제시</li>                    <li>긴 텍스트 입력의 번거로움을 해결하기 위해 음성 입력(보이스 타이핑) 앱을 함께 활용하는 방법을 소개</li>                    <li>새로운 AI 도구들의 빠른 출시 속도에 대응하기 위해 Product Hunt를 통한 정보 추적 방법을 제안</li>                    <li>Product Hunt의 런치 아카이브 기능을 통해 과거 제품들도 검색하고 트렌드를 파악할 수 있음을 설명</li>                </ul>            </div>
         </div>
@@ -418,7 +498,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 32</div>
-                <img src="slides/slide_032.png" class="slide-image" alt="슬라이드 32" loading="lazy">            </div>
+                <img src="slides/slide_032.jpg" class="slide-image" alt="슬라이드 32" loading="lazy" onclick="openLightbox('slides/slide_032.jpg', 32)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Product Hunt에서 다양한 스타트업과 대기업의 새로운 제품 런칭 정보를 얻을 수 있음</li>                    <li>현재 음성 인식 관련 서드파티 도구를 사용 중임</li>                    <li>애플의 AI 기술이 아직 충분하지 않아 아이폰 기본 음성 인식 대신 외부 도구를 선택함</li>                    <li>향후 Gemini 등과의 통합으로 애플 음성 인식 기능이 개선될 것으로 예상함</li>                </ul>            </div>
         </div>
@@ -426,7 +506,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 33</div>
-                <img src="slides/slide_033.png" class="slide-image" alt="슬라이드 33" loading="lazy">            </div>
+                <img src="slides/slide_033.jpg" class="slide-image" alt="슬라이드 33" loading="lazy" onclick="openLightbox('slides/slide_033.jpg', 33)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>마크다운 형식이 마음에 들지 않을 때 '마크다운 형식은 제거하고 작성해줘'라고 요청하여 포맷을 변경할 수 있다</li>                    <li>일상 업무 워크플로우에서 필요한 컨텍스트를 복사하고 몇 번의 반복 작업을 통해 원하는 결과물을 얻는다</li>                    <li>해당 AI 서비스는 주당 2천 단어까지 무료로 제공하고 그 이후부터는 유료 정책을 가지고 있다</li>                    <li>실제로는 2천 단어를 초과해도 속도 저하 없이 서비스가 제공된다</li>                </ul>            </div>
         </div>
@@ -434,7 +514,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 34</div>
-                <img src="slides/slide_034.png" class="slide-image" alt="슬라이드 34" loading="lazy">            </div>
+                <img src="slides/slide_034.jpg" class="slide-image" alt="슬라이드 34" loading="lazy" onclick="openLightbox('slides/slide_034.jpg', 34)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 스타트업들은 현재 고객 확보에 집중하는 단계로 무료 서비스를 제공하고 있다</li>                    <li>대부분의 AI 서비스들은 OpenAI나 Anthropic 등의 API를 활용한 인터페이스 제공 업체이다</li>                    <li>음성 AI 서비스의 경우 Eleven Labs 같은 전문 업체의 API를 사용한다</li>                    <li>향후 유료화 시 개인용 앱 개발을 통해 대응할 수 있다는 전략을 제시했다</li>                    <li>강연자가 Claude를 활용해 코딩과 글쓰기 작업을 일상적으로 수행하고 있다</li>                </ul>            </div>
         </div>
@@ -442,7 +522,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 35</div>
-                <img src="slides/slide_035.png" class="slide-image" alt="슬라이드 35" loading="lazy">            </div>
+                <img src="slides/slide_035.jpg" class="slide-image" alt="슬라이드 35" loading="lazy" onclick="openLightbox('slides/slide_035.jpg', 35)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>현재 AI 도구들이 빌딩 블록 형태로 수많은 조합과 재조합이 가능한 상황</li>                    <li>매일 새로운 AI 서비스가 우후죽순 출시되고 있음</li>                    <li>어떤 도구와 조합이 최적인지에 대한 명확한 정답이 아직 없는 딜레마 상황</li>                    <li>AI 출시 3년차로 모든 개발자들이 거대한 디자인 스페이스를 탐색하며 베스트 프랙티스를 찾고 있는 무림의 시대</li>                    <li>VS Code의 GitHub Copilot을 활용해 강의계획서나 추천서 등 실무 문서 작성을 자동화하는 실제 사례 시연</li>                </ul>            </div>
         </div>
@@ -450,7 +530,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 36</div>
-                <img src="slides/slide_036.png" class="slide-image" alt="슬라이드 36" loading="lazy">            </div>
+                <img src="slides/slide_036.jpg" class="slide-image" alt="슬라이드 36" loading="lazy" onclick="openLightbox('slides/slide_036.jpg', 36)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI와의 협업에서 다중 세션을 동시에 활용하여 병렬 작업을 진행하는 방법을 제시</li>                    <li>음성 인터페이스를 통해 AI에게 자연스럽게 지시하며 작업하는 워크플로우 소개</li>                    <li>강의 노트 제작을 실제 사례로 하여 AI와의 협업 프로세스를 구체적으로 설명</li>                    <li>기존 작업물을 참조 자료로 활용하여 AI가 유사한 품질의 결과물을 생성하도록 하는 방법론 제시</li>                </ul>            </div>
         </div>
@@ -458,7 +538,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 37</div>
-                <img src="slides/slide_037.png" class="slide-image" alt="슬라이드 37" loading="lazy">            </div>
+                <img src="slides/slide_037.jpg" class="slide-image" alt="슬라이드 37" loading="lazy" onclick="openLightbox('slides/slide_037.jpg', 37)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI는 기본적으로 GUI를 직접 '볼' 수 없어 화면을 인식하지 못한다</li>                    <li>AI는 CLI 명령어를 읽고 쓸 수 있어 GUI에서 CLI로의 전환이 필요하다</li>                    <li>AI도 Playwright 같은 브라우저 자동화 도구를 통해 GUI를 사용할 수 있다</li>                    <li>AI가 GUI를 사용하는 것은 브라우저 에뮬레이션으로 '인간의 옷을 입는' 방식이다</li>                    <li>마크다운으로 프레젠테이션을 생성하는 시스템을 Claude를 활용해 구현했다</li>                </ul>            </div>
         </div>
@@ -466,7 +546,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 38</div>
-                <img src="slides/slide_038.png" class="slide-image" alt="슬라이드 38" loading="lazy">            </div>
+                <img src="slides/slide_038.jpg" class="slide-image" alt="슬라이드 38" loading="lazy" onclick="openLightbox('slides/slide_038.jpg', 38)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델 선택 시 상황에 맞는 도구를 사용해야 함</li>                    <li>OpenAI GPT-4는 선구자적 역할을 했지만 현재 신뢰성이 낮아 거의 사용하지 않음</li>                    <li>Claude는 코드 작성과 글쓰기에서 가장 신뢰할 수 있어 메인으로 사용</li>                    <li>Claude를 이용해 마크다운으로 슬라이드를 작성하고 GitHub을 통해 자동으로 PDF 변환하는 워크플로우 구축</li>                    <li>여러 Claude 코드 세션을 동시에 관리하기 위해 세션 뷰 관리 패키지를 활용하고 API 비용은 월 100달러로 3-4개월 사용 가능</li>                </ul>            </div>
         </div>
@@ -474,7 +554,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 39</div>
-                <img src="slides/slide_039.png" class="slide-image" alt="슬라이드 39" loading="lazy">            </div>
+                <img src="slides/slide_039.jpg" class="slide-image" alt="슬라이드 39" loading="lazy" onclick="openLightbox('slides/slide_039.jpg', 39)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Claude 코드를 에이전틱하게 사용하면 월 100달러 정도의 API 비용이 발생한다</li>                    <li>프레젠테이션 시스템 구축 프로젝트에 약 100-150달러의 API 비용이 소요되었다</li>                    <li>AI를 활용한 개발 비용은 사람을 고용하는 비용의 1/10에서 1/100 수준으로 매우 경제적이다</li>                    <li>강의 자료 준비를 위해 Claude와의 상호작용에 50달러(약 10만원)를 사용했다</li>                </ul>            </div>
         </div>
@@ -482,7 +562,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 40</div>
-                <img src="slides/slide_040.png" class="slide-image" alt="슬라이드 40" loading="lazy">            </div>
+                <img src="slides/slide_040.jpg" class="slide-image" alt="슬라이드 40" loading="lazy" onclick="openLightbox('slides/slide_040.jpg', 40)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>Claude Code는 토큰 사용량을 추적하여 사용량을 모니터링할 수 있는 기능을 제공한다</li>                    <li>회의록 작성 시 네이버 클로바노트는 화자 분리에 특화되어 있고, 티로(Tiro)는 텍스트 추출에 강점이 있다</li>                    <li>Claude Code를 활용하여 회의록 파일들을 한 폴더에 넣고 자동으로 합쳐서 회의록을 생성할 수 있다</li>                    <li>AI가 잘못 인식한 사람 이름 등의 오류는 대화형으로 수정하여 정확도를 높일 수 있다</li>                    <li>몇 번의 반복적인 대화를 통해 공유 가능한 수준의 완성된 회의록을 만들 수 있다</li>                </ul>            </div>
         </div>
@@ -490,7 +570,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 41</div>
-                <img src="slides/slide_041.png" class="slide-image" alt="슬라이드 41" loading="lazy">            </div>
+                <img src="slides/slide_041.jpg" class="slide-image" alt="슬라이드 41" loading="lazy" onclick="openLightbox('slides/slide_041.jpg', 41)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>애플의 음성 인식은 정확도가 낮고 AI 시대에 뒤처져 있다고 평가</li>                    <li>WisprFlow는 AI 음성 인식 API를 활용하여 97.2% 정확도와 100개 이상 언어를 지원</li>                    <li>WisprFlow를 사용하면 타이핑 속도의 4배 빠른 입력이 가능</li>                    <li>대안으로 Willow($15/월)와 MacWhisper($39.99 일회) 등이 있음</li>                    <li>Gemini는 투자 관련 문서 검토나 검색이 필요한 작업에 유용하게 활용 가능</li>                </ul>            </div>
         </div>
@@ -498,7 +578,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 42</div>
-                <img src="slides/slide_042.png" class="slide-image" alt="슬라이드 42" loading="lazy">            </div>
+                <img src="slides/slide_042.jpg" class="slide-image" alt="슬라이드 42" loading="lazy" onclick="openLightbox('slides/slide_042.jpg', 42)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>agent-deck은 Claude Code 세션 관리를 위한 터미널 UI 기반 도구로 여러 프로젝트를 동시에 진행할 수 있는 tmux 기반 세션 매니저이다</li>                    <li>Google Gemini는 2TB 구글 드라이브를 포함하여 긴 문서 분석과 딥 리서치에 활용할 수 있다</li>                    <li>회의록 워크플로우는 ClovaNote(화자 인식)와 Tiro(정확한 전사)를 결합하여 마크다운으로 변환 후 구글 독스로 변환하는 과정으로 구성된다</li>                    <li>AI 도구들을 연결하는 워크플로우 구축이 중요하며, 각 도구의 특성을 파악하여 효율적으로 조합해야 한다</li>                    <li>개인별 AI 활용 베스트 프렉티스를 공유하고 토론하는 시간을 통해 서로의 경험을 나눌 예정이다</li>                </ul>            </div>
         </div>
@@ -506,7 +586,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 43</div>
-                <img src="slides/slide_043.png" class="slide-image" alt="슬라이드 43" loading="lazy">            </div>
+                <img src="slides/slide_043.jpg" class="slide-image" alt="슬라이드 43" loading="lazy" onclick="openLightbox('slides/slide_043.jpg', 43)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>음성 입력(WisprFlow)을 통해 Claude Code와 대화하며 실시간 개발 작업을 시연</li>                    <li>CLI 명령어를 활용한 작업 자동화와 AI 도구 간 워크플로우 연결 방법을 소개</li>                    <li>GUI 없이 순수 대화만으로 소프트웨어 개발이 가능함을 실제 화면을 통해 증명</li>                    <li>이메일 답장 작성 등 일상적인 업무에서 AI를 활용하는 구체적인 사례를 공유</li>                    <li>Gemini에서 Claude로 전환한 경험을 통해 AI 모델별 코딩 성능 차이를 설명</li>                </ul>            </div>
         </div>
@@ -514,7 +594,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 44</div>
-                <img src="slides/slide_044.png" class="slide-image" alt="슬라이드 44" loading="lazy">            </div>
+                <img src="slides/slide_044.jpg" class="slide-image" alt="슬라이드 44" loading="lazy" onclick="openLightbox('slides/slide_044.jpg', 44)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델들이 2-3개월마다 메이저 릴리즈되면서 판이 계속 바뀌는 상황이다</li>                    <li>Gemini나 OpenAI Codex의 다음 버전이 나오면 현재 상황이 다시 뒤바뀔 수 있다</li>                    <li>Claude Code와 같은 터미널 기반 도구들은 현재 주로 개발자들이 사용한다</li>                    <li>비개발자들을 위한 웹 브라우저 기반 GUI 환경이 개발되고 있을 것으로 예상된다</li>                    <li>터미널 환경은 비개발자들에게 장벽이 되지만, 곧 더 접근하기 쉬운 환경이 제공될 것이다</li>                </ul>            </div>
         </div>
@@ -522,7 +602,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 45</div>
-                <img src="slides/slide_045.png" class="slide-image" alt="슬라이드 45" loading="lazy">            </div>
+                <img src="slides/slide_045.jpg" class="slide-image" alt="슬라이드 45" loading="lazy" onclick="openLightbox('slides/slide_045.jpg', 45)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 관련 분야는 빠른 속도로 발전하고 있으며 많은 주목을 받고 있다</li>                    <li>코딩에 익숙하지 않은 기획자와 마케터도 Claude Code 환경에서 높은 성과를 낼 수 있다</li>                    <li>CLI(터미널) 환경에 대한 초기 거부감만 극복하면 뛰어난 성능을 얻을 수 있다</li>                    <li>바이브 코딩을 통해 코드를 직접 작성하지 않아도 충분히 활용 가능하다</li>                    <li>Claude Code로 직접 MCP(Model Context Protocol) 도구를 개발하여 논문 검색 등의 기능을 확장할 수 있다</li>                </ul>            </div>
         </div>
@@ -530,7 +610,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 46</div>
-                <img src="slides/slide_046.png" class="slide-image" alt="슬라이드 46" loading="lazy">            </div>
+                <img src="slides/slide_046.jpg" class="slide-image" alt="슬라이드 46" loading="lazy" onclick="openLightbox('slides/slide_046.jpg', 46)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI를 2차 함수적으로 활용하여 필요한 기능을 직접 만들어 사용할 수 있는 능력의 중요성</li>                    <li>AI 활용 능력에 따른 개인 간 격차가 클 것으로 예상됨</li>                    <li>최신 LLM 모델의 성능 향상으로 복잡한 프롬프팅 없이도 좋은 결과를 얻을 수 있음</li>                    <li>프롬프트 정교화에 투자하는 시간과 단순한 재질문 간의 트레이드오프 관계</li>                    <li>AI 사용 시 효율성을 위한 개인별 최적화 전략의 필요성</li>                </ul>            </div>
         </div>
@@ -538,7 +618,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 47</div>
-                <img src="slides/slide_047.png" class="slide-image" alt="슬라이드 47" loading="lazy">            </div>
+                <img src="slides/slide_047.jpg" class="slide-image" alt="슬라이드 47" loading="lazy" onclick="openLightbox('slides/slide_047.jpg', 47)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>토론 주제로 AI 도구 사용 경험, 효과적 사용 사례, 실패 경험 등을 다룬다</li>                    <li>프롬프트 작성의 어려움에 대해 프롬프트를 만들어주는 프롬프트를 활용하는 방법을 제시한다</li>                    <li>문법 체크 프롬프트 개선 사례: AI가 원문을 과도하게 변경하는 문제를 해결하기 위해 원본 구조 유지를 명시하도록 프롬프트를 업데이트했다</li>                    <li>프론트엔드 인터페이스를 개인 프롬프트 라이브러리로 활용하는 방법을 소개한다</li>                </ul>            </div>
         </div>
@@ -546,7 +626,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 48</div>
-                <img src="slides/slide_048.png" class="slide-image" alt="슬라이드 48" loading="lazy">            </div>
+                <img src="slides/slide_048.jpg" class="slide-image" alt="슬라이드 48" loading="lazy" onclick="openLightbox('slides/slide_048.jpg', 48)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>프롬프트 작성을 수동으로 할 필요가 없으며, AI를 활용해 프롬프트를 자동 생성할 수 있다</li>                    <li>마노스 등의 에이전트 AI 프로그램들은 초기에 주목받았지만, 메이저 플레이어들이 해당 기능을 자체 서비스에 포함시키면서 경쟁력을 잃고 있다</li>                    <li>특정 니치 영역에 특화된 AI 서비스들은 여전히 경쟁력을 유지하고 있다</li>                    <li>젠스파크와 같이 슬라이드 제작에 특화된 AI 도구는 해당 분야에서 좋은 성능을 보인다</li>                </ul>            </div>
         </div>
@@ -554,7 +634,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 49</div>
-                <img src="slides/slide_049.png" class="slide-image" alt="슬라이드 49" loading="lazy">            </div>
+                <img src="slides/slide_049.jpg" class="slide-image" alt="슬라이드 49" loading="lazy" onclick="openLightbox('slides/slide_049.jpg', 49)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>오픈 코드(Open Code)가 최근 AI 코딩 분야에서 주목받는 도구로 부상하고 있음</li>                    <li>개인의 워크플로우에 만족할 만한 결과가 나올 때까지 다양한 AI 도구를 실험하는 것이 중요함</li>                    <li>AI 개발 관련 오픈 카톡방을 통해 최신 AI 동향과 도구 정보를 수집하는 방법을 활용</li>                    <li>AI 업무 자동화와 이미지 생성 도구(나노바나) 등 다양한 AI 활용 사례가 커뮤니티에서 공유되고 있음</li>                </ul>            </div>
         </div>
@@ -562,7 +642,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 50</div>
-                <img src="slides/slide_050.png" class="slide-image" alt="슬라이드 50" loading="lazy">            </div>
+                <img src="slides/slide_050.jpg" class="slide-image" alt="슬라이드 50" loading="lazy" onclick="openLightbox('slides/slide_050.jpg', 50)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>조직의 AI 트랜스포메이션을 위해서는 문서와 데이터를 구별하고 GitHub 같은 접근 방식을 취해야 함</li>                    <li>AI 시대의 새 표준으로 llms.txt와 Markdown을 활용한 최소 마크업, 시맨틱 태깅이 중요함</li>                    <li>데이터 소버린티(주권)에 대해 고민하고 개인의 AI 트랜스포메이션을 위해 GUI에서 CLI로 전환해야 함</li>                    <li>상황에 맞는 모델 선택과 AI 도구들의 조합을 통한 워크플로우 최적화가 필요함</li>                    <li>LLM 모델 사용 시 파일 업로드로 인한 데이터 유출 위험성과 익명화 등의 보안 대책 필요성</li>                </ul>            </div>
         </div>
@@ -570,13 +650,52 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 51</div>
-                <img src="slides/slide_051.png" class="slide-image" alt="슬라이드 51" loading="lazy">            </div>
+                <img src="slides/slide_051.jpg" class="slide-image" alt="슬라이드 51" loading="lazy" onclick="openLightbox('slides/slide_051.jpg', 51)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 서비스(ChatGPT, NotebookLM 등)에서 사용자 데이터의 저장 및 활용 여부를 확인할 수 있는 방법이 없어 완전한 블랙박스 상태이다</li>                    <li>무료 AI 서비스의 경우 사용자 데이터를 학습에 활용한다고 가정하는 것이 안전한 접근법이다</li>                    <li>Google의 NotebookLM과 같은 서비스도 이용약관을 신중히 검토해야 하며, 무료 서비스는 데이터 활용 가능성이 높다</li>                    <li>Anthropic의 프로젝트 파나마 사례처럼 AI 회사들은 양질의 데이터 확보를 위해 수백억 원을 투자하여 수백만 권의 책을 스캔하여 학습시키고 있다</li>                    <li>AI 회사들이 접근 가능한 모든 데이터를 학습에 활용한다고 봐야 하며, 데이터 프라이버시에 대한 경각심이 필요하다</li>                </ul>            </div>
         </div>
 
+    <script>
+        var slideImages = [];
+        var currentIdx = 0;
+        document.querySelectorAll('.slide-image').forEach(function(img) {
+            slideImages.push({ src: img.getAttribute('src'), alt: img.getAttribute('alt') });
+        });
+
+        function openLightbox(src, slideNum) {
+            currentIdx = slideImages.findIndex(function(s) { return s.src === src; });
+            if (currentIdx < 0) currentIdx = 0;
+            showSlide();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        function navLightbox(e, dir) {
+            e.stopPropagation();
+            currentIdx = (currentIdx + dir + slideImages.length) % slideImages.length;
+            showSlide();
+        }
+        function showSlide() {
+            var s = slideImages[currentIdx];
+            document.getElementById('lightbox-img').src = s.src;
+            document.getElementById('lightbox-caption').textContent = s.alt + ' (' + (currentIdx + 1) + '/' + slideImages.length + ')';
+        }
+        document.addEventListener('keydown', function(e) {
+            var lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('active')) return;
+            if (e.key === 'Escape') { lb.classList.remove('active'); document.body.style.overflow = ''; }
+            if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + slideImages.length) % slideImages.length; showSlide(); }
+            if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % slideImages.length; showSlide(); }
+        });
+    </script>
+
         <footer>
-            생성일시: 2026-02-16 02:29:15 | 자동 생성된 강의노트
+            생성일시: 2026-02-16 09:14:20 | 자동 생성된 강의노트
         </footer>
     </div>
 </body>

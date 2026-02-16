@@ -392,6 +392,78 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
             font-size: 0.85em;
         }}
         
+        /* 슬라이드 클릭 확대 (라이트박스) */
+        .slide-image {{
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }}
+        .slide-image:hover {{
+            opacity: 0.85;
+        }}
+        .lightbox-overlay {{
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }}
+        .lightbox-overlay.active {{
+            display: flex;
+        }}
+        .lightbox-overlay img {{
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }}
+        .lightbox-close {{
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            line-height: 1;
+        }}
+        .lightbox-close:hover {{
+            color: #ccc;
+        }}
+        .lightbox-nav {{
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            user-select: none;
+            padding: 10px;
+            line-height: 1;
+        }}
+        .lightbox-nav:hover {{
+            color: #ccc;
+        }}
+        .lightbox-prev {{ left: 20px; }}
+        .lightbox-next {{ right: 20px; }}
+        .lightbox-caption {{
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.95em;
+            z-index: 10000;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }}
+        
         /* 반응형: 작은 화면에서는 세로 배치 */
         @media (max-width: 768px) {{
             .slide-section {{
@@ -406,6 +478,14 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
     </style>
 </head>
 <body>
+    <!-- 라이트박스 오버레이 -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="navLightbox(event, -1)">&#8249;</span>
+        <img id="lightbox-img" src="" alt="">
+        <span class="lightbox-nav lightbox-next" onclick="navLightbox(event, 1)">&#8250;</span>
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
     <div class="container">
         <header>
             <h1>{lecture_info['topic']}</h1>
@@ -438,7 +518,7 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
 ''')
         
         if img_src:
-            html_parts.append(f'                <img src="{img_src}" class="slide-image" alt="슬라이드 {slide_num}" loading="lazy">')
+            html_parts.append(f'                <img src="{img_src}" class="slide-image" alt="슬라이드 {slide_num}" loading="lazy" onclick="openLightbox(\'{img_src}\', {slide_num})">')
         
         html_parts.append('''            </div>
             <div class="slide-right">
@@ -481,6 +561,48 @@ def generate_html(output_dir, summaries, qa_section, key_takeaways, metadata, le
             html_parts.append(f'                <li>{takeaway}</li>')
         html_parts.append('''            </ul>
         </div>
+''')
+    
+    # 라이트박스 JavaScript
+    html_parts.append('''
+    <script>
+        var slideImages = [];
+        var currentIdx = 0;
+        document.querySelectorAll('.slide-image').forEach(function(img) {
+            slideImages.push({ src: img.getAttribute('src'), alt: img.getAttribute('alt') });
+        });
+
+        function openLightbox(src, slideNum) {
+            currentIdx = slideImages.findIndex(function(s) { return s.src === src; });
+            if (currentIdx < 0) currentIdx = 0;
+            showSlide();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        function navLightbox(e, dir) {
+            e.stopPropagation();
+            currentIdx = (currentIdx + dir + slideImages.length) % slideImages.length;
+            showSlide();
+        }
+        function showSlide() {
+            var s = slideImages[currentIdx];
+            document.getElementById('lightbox-img').src = s.src;
+            document.getElementById('lightbox-caption').textContent = s.alt + ' (' + (currentIdx + 1) + '/' + slideImages.length + ')';
+        }
+        document.addEventListener('keydown', function(e) {
+            var lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('active')) return;
+            if (e.key === 'Escape') { lb.classList.remove('active'); document.body.style.overflow = ''; }
+            if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + slideImages.length) % slideImages.length; showSlide(); }
+            if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % slideImages.length; showSlide(); }
+        });
+    </script>
 ''')
     
     # 푸터

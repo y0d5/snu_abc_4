@@ -145,6 +145,78 @@
             font-size: 0.85em;
         }
         
+        /* 슬라이드 클릭 확대 (라이트박스) */
+        .slide-image {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .slide-image:hover {
+            opacity: 0.85;
+        }
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .lightbox-overlay.active {
+            display: flex;
+        }
+        .lightbox-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            line-height: 1;
+        }
+        .lightbox-close:hover {
+            color: #ccc;
+        }
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            user-select: none;
+            padding: 10px;
+            line-height: 1;
+        }
+        .lightbox-nav:hover {
+            color: #ccc;
+        }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        .lightbox-caption {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.95em;
+            z-index: 10000;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+        
         /* 반응형: 작은 화면에서는 세로 배치 */
         @media (max-width: 768px) {
             .slide-section {
@@ -159,6 +231,14 @@
     </style>
 </head>
 <body>
+    <!-- 라이트박스 오버레이 -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="navLightbox(event, -1)">&#8249;</span>
+        <img id="lightbox-img" src="" alt="">
+        <span class="lightbox-nav lightbox-next" onclick="navLightbox(event, 1)">&#8250;</span>
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
     <div class="container">
         <header>
             <h1>AI기술을 통한 산업혁신 동향</h1>
@@ -170,7 +250,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 1</div>
-                <img src="slides/slide_001.png" class="slide-image" alt="슬라이드 1" loading="lazy">            </div>
+                <img src="slides/slide_001.jpg" class="slide-image" alt="슬라이드 1" loading="lazy" onclick="openLightbox('slides/slide_001.jpg', 1)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>강연자는 카이스트 AI 대학원 교수이자 이니지라는 회사의 대표로 활동</li>                    <li>제조 AI 관련 현재 동향과 국내외 솔루션에 대한 전문 지식 보유</li>                    <li>시계열 예측과 설명 가능 인공지능 연구 분야 전문가</li>                </ul>            </div>
         </div>
@@ -178,7 +258,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 2</div>
-                <img src="slides/slide_002.png" class="slide-image" alt="슬라이드 2" loading="lazy">            </div>
+                <img src="slides/slide_002.jpg" class="slide-image" alt="슬라이드 2" loading="lazy" onclick="openLightbox('slides/slide_002.jpg', 2)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>강의 내용은 AI 트렌드, 설명 가능 인공지능, 제조 AI 적용 사례, 제조 파운데이션 모델로 구성</li>                    <li>AI 회사 운영 경험을 통한 AI 산업 시장에 대한 실무적 관점 제공</li>                </ul>            </div>
         </div>
@@ -186,7 +266,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 3</div>
-                <img src="slides/slide_003.png" class="slide-image" alt="슬라이드 3" loading="lazy">            </div>
+                <img src="slides/slide_003.jpg" class="slide-image" alt="슬라이드 3" loading="lazy" onclick="openLightbox('slides/slide_003.jpg', 3)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>손에 잡히는 경제 플러스 프로그램에서 설명 가능 인공지능에 대해 방송했음</li>                    <li>해당 방송 영상의 시청자 수가 2만 5천 명 정도로 높은 조회수를 기록했음</li>                </ul>            </div>
         </div>
@@ -194,7 +274,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 4</div>
-                <img src="slides/slide_004.png" class="slide-image" alt="슬라이드 4" loading="lazy">            </div>
+                <img src="slides/slide_004.jpg" class="slide-image" alt="슬라이드 4" loading="lazy" onclick="openLightbox('slides/slide_004.jpg', 4)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 관련 미중 패권 전쟁에서 올해는 물리적 AI(Physical AI)에 대한 패권 전쟁이 주요 화두가 될 예정</li>                    <li>에이전틱 AI(Agentic AI)가 올해 중요한 기술 트렌드로 부상할 것</li>                    <li>물리적 AI 분야에서 제조업 적용이 로봇보다 먼저 실현될 것으로 예상</li>                    <li>AI 인재들의 취업 선택지로 중국(풍부한 데이터), 미국(높은 연봉) 각각의 장단점 존재</li>                    <li>미국은 AI로 인한 레이오프가 심각하며, 중국은 치열한 경쟁으로 인한 번아웃 문제가 있다</li>                </ul>            </div>
         </div>
@@ -202,7 +282,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 5</div>
-                <img src="slides/slide_005.png" class="slide-image" alt="슬라이드 5" loading="lazy">            </div>
+                <img src="slides/slide_005.jpg" class="slide-image" alt="슬라이드 5" loading="lazy" onclick="openLightbox('slides/slide_005.jpg', 5)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 발전 현황에는 자율주행 자동차, 비전 모델, 마케팅 모델, LLM, 피지컬 AI가 포함된다</li>                </ul>            </div>
         </div>
@@ -210,7 +290,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 6</div>
-                <img src="slides/slide_006.png" class="slide-image" alt="슬라이드 6" loading="lazy">            </div>
+                <img src="slides/slide_006.jpg" class="slide-image" alt="슬라이드 6" loading="lazy" onclick="openLightbox('slides/slide_006.jpg', 6)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>웨이모는 자율주행 기술에서 가장 높은 기술력을 인정받으며 벤치마크 1위를 차지하고 있다</li>                    <li>웨이모는 2005년부터 자율주행 자동차 개발을 시작했고, 2015년 경 도로 테스트 동영상으로 주목받았다</li>                    <li>웨이모는 개발 과정에서 사고, 우버와의 법정 소송, 구글로부터의 분리 등 여러 어려움을 겪었다</li>                    <li>현재 웨이모는 법률 문제를 해결하고 현대자동차 같은 기업들이 신뢰할 수 있는 파트너가 되었다</li>                    <li>테슬라와 웨이모는 자율주행 개발에 있어 서로 다른 접근 방식을 취하고 있다</li>                    <li>웨이모는 차분하고 체계적인 접근을, 테슬라는 추격자형 전략을 사용한다</li>                    <li>AI 개발자 관점에서 웨이모가 더 투명한 개발 과정을 거쳤다고 평가된다</li>                    <li>테슬라는 가장 많은 수익을 창출했고, 웨이모는 가장 안전하다고 알려져 있지만 레벨 3 인증을 받지 못했다</li>                    <li>벤츠가 작년에 미국과 독일에서 레벨 3 자율주행을 최초로 상용화했다</li>                    <li>웨이모는 AI 솔루션이 롱테일을 거쳐 안전하고 믿을 수 있는 서비스로 발전하는 대표적인 사례이다</li>                </ul>            </div>
         </div>
@@ -218,7 +298,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 7</div>
-                <img src="slides/slide_007.png" class="slide-image" alt="슬라이드 7" loading="lazy">            </div>
+                <img src="slides/slide_007.jpg" class="slide-image" alt="슬라이드 7" loading="lazy" onclick="openLightbox('slides/slide_007.jpg', 7)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>자율주행뿐만 아니라 금융, 제조 등 다양한 분야에서 AI 기술이 적용되면서 오래된 회사들의 도태와 성장이 동시에 일어나고 있다</li>                    <li>알파고 등장 이후 10년간 컴퓨터 비전 분야에서 데이터만 충분하면 AI가 사람보다 뛰어난 성능을 보이게 되었다</li>                    <li>눈으로 보는 것에 대한 자동화가 대폭 이루어진 후, 6-7년 후에는 글 읽기와 요약 분야에서도 AI가 사람보다 우수한 성능을 보이게 되었다</li>                    <li>현재 LLM(Large Language Model)이 실무에서 광범위하게 활용되고 있으며, 데이터 수집 등 다양한 업무에 적용되고 있다</li>                </ul>            </div>
         </div>
@@ -226,7 +306,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 8</div>
-                <img src="slides/slide_008.png" class="slide-image" alt="슬라이드 8" loading="lazy">            </div>
+                <img src="slides/slide_008.jpg" class="slide-image" alt="슬라이드 8" loading="lazy" onclick="openLightbox('slides/slide_008.jpg', 8)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>현재 제조 AI에 대한 논의가 10년 전 제조 AI, 스마트 공장 전략과 유사한 패턴을 보이고 있다</li>                    <li>LLM의 가장 큰 변화는 검색의 확장으로, 구글 검색의 똑똑한 버전이라고 볼 수 있다</li>                    <li>LLM은 문서에서 답을 직접 찾아서 제공하는 것이 핵심 기능이다</li>                    <li>뉴럴 인덱싱은 기존 데이터베이스의 명시적 인덱싱과 달리 자동으로 콘텐츠를 분해하고 조합한다</li>                    <li>뉴럴 인덱싱에서는 데이터 분해와 조합 과정이 비명시적이고 자동화되어 있다</li>                </ul>            </div>
         </div>
@@ -234,7 +314,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 9</div>
-                <img src="slides/slide_009.png" class="slide-image" alt="슬라이드 9" loading="lazy">            </div>
+                <img src="slides/slide_009.jpg" class="slide-image" alt="슬라이드 9" loading="lazy" onclick="openLightbox('slides/slide_009.jpg', 9)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>뉴럴 인덱싱은 정보를 분해하여 저장했다가 다시 가져오는 과정으로, 사람의 기억 방식과 유사하다</li>                    <li>작은 데이터의 똑똑한 LLM vs 방대한 데이터의 덜 똑똑한 LLM 중에서는 일반적으로 후자가 선호된다</li>                    <li>전문적인 용도(수학, 회로, 번역 등)가 아닌 범용 목적에서는 데이터가 풍부한 LLM이 더 유용하다</li>                    <li>현재 LLM 시장에서 OpenAI와 DeepMind가 성공하는 이유는 범용 AI의 강점 때문이다</li>                    <li>LLM은 본질적으로 구글 검색 엔진의 확장된 형태로, 범용 인덱싱 시스템으로 볼 수 있다</li>                </ul>            </div>
         </div>
@@ -242,7 +322,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 10</div>
-                <img src="slides/slide_010.png" class="slide-image" alt="슬라이드 10" loading="lazy">            </div>
+                <img src="slides/slide_010.jpg" class="slide-image" alt="슬라이드 10" loading="lazy" onclick="openLightbox('slides/slide_010.jpg', 10)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>LLM의 등장으로 검색 엔진 시장의 순위가 급격히 변화했다 (ChatGPT 1등, Gemini 2등, 네이버 3등)</li>                    <li>기존 구글 1등, 네이버 2등 구조에서 LLM 기반 검색으로 패러다임이 전환되었다</li>                    <li>네이버 검색 사용자가 크게 감소하며 3등으로 밀려나는 상황이 발생했다</li>                    <li>ChatGPT는 유료 모델임에도 불구하고 광고 기반 무료 검색을 대체하고 있다</li>                    <li>크롤링 기술이 단순 정보 검색을 넘어 국가 정보 보안 및 안보 분야에서도 중요한 역할을 한다</li>                </ul>            </div>
         </div>
@@ -250,7 +330,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 11</div>
-                <img src="slides/slide_011.png" class="slide-image" alt="슬라이드 11" loading="lazy">            </div>
+                <img src="slides/slide_011.jpg" class="slide-image" alt="슬라이드 11" loading="lazy" onclick="openLightbox('slides/slide_011.jpg', 11)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>검색 엔진을 보유한 국가는 미국(구글), 중국(바이두), 러시아, 그리고 한국(네이버) 등 소수에 불과하다</li>                    <li>한국의 검색 서비스 하나가 없어지면서 검색 엔진 보유국에서의 지위가 약화되고 있다</li>                    <li>국정원이 2천억을 투입하여 LLM을 개발하겠다고 발표한 것은 민간 크롤링 감소에 따른 전략적 대응이다</li>                    <li>다크웹, 첩보, 보안 관련 정보 수집을 위한 인덱싱은 전략적으로 계속 필요하다</li>                    <li>온프레미스 LLM은 기존 엔터프라이즈 검색을 대체하는 역할을 한다</li>                </ul>            </div>
         </div>
@@ -258,7 +338,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 12</div>
-                <img src="slides/slide_012.png" class="slide-image" alt="슬라이드 12" loading="lazy">            </div>
+                <img src="slides/slide_012.jpg" class="slide-image" alt="슬라이드 12" loading="lazy" onclick="openLightbox('slides/slide_012.jpg', 12)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 발전 단계는 퍼셉션 AI → 제너러티브 AI → 에이전트 AI → 피지컬 AI 순으로 진행되고 있다</li>                    <li>중국에 대한 GPU 수출 제재로 인해 H100 GPU 6만장이 한국으로 유입되어 대기업들이 구매하고 있다</li>                    <li>2016년 퍼셉션 AI 시대에도 데이터, GPU, 인력 부족으로 한국이 ResNet 등 주요 모델 개발에서 뒤처졌다</li>                    <li>초기에는 대용량 GPU가 필요했으나 2-3년 후 TinyNet 같은 경량화된 모델로 소형 디바이스에서도 정교한 AI 기능이 가능해졌다</li>                    <li>퍼셉션 AI 초기 NVIDIA GPU 호황 이후 경량화로 인해 해당 용도의 GPU 판매가 감소했다</li>                </ul>            </div>
         </div>
@@ -266,7 +346,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 13</div>
-                <img src="slides/slide_013.png" class="slide-image" alt="슬라이드 13" loading="lazy">            </div>
+                <img src="slides/slide_013.jpg" class="slide-image" alt="슬라이드 13" loading="lazy" onclick="openLightbox('slides/slide_013.jpg', 13)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>LLM 출현 비용이 최근 2-3년 간 약 100분의 1 수준으로 급격히 감소했다</li>                    <li>P600과 같은 새로운 하드웨어는 기존 H100 대비 메모리 용량은 유사하지만 가격이 4-5분의 1 수준이다</li>                    <li>LLM 상용화와 함께 추론 속도, 비용, 디바이스 모두 개선되는 트렌드가 나타나고 있다</li>                    <li>작은 규모의 32B, 72B 모델도 과거에는 5천만 원짜리 H100 8장(총 7-8억 원)의 서버가 필요했다</li>                </ul>            </div>
         </div>
@@ -274,7 +354,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 14</div>
-                <img src="slides/slide_014.png" class="slide-image" alt="슬라이드 14" loading="lazy">            </div>
+                <img src="slides/slide_014.jpg" class="slide-image" alt="슬라이드 14" loading="lazy" onclick="openLightbox('slides/slide_014.jpg', 14)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>깐부치킨 할 때 사용된 GPU 2개(600만원)만으로도 작은 LLM 파인 튜닝이 가능하다</li>                    <li>GPU 가격이 하락하면서 LLM 기술이 점차 범용화되고 있다</li>                    <li>NVIDIA는 고가 GPU 판매 감소로 인해 새로운 용도(피지컬 등)를 찾고 있다</li>                    <li>컴퓨터 비전에서 겪었던 기술의 범용화 현상이 LLM에서도 조만간 일어날 가능성이 높다</li>                    <li>과거 AI와 달리 현재 LLM AI는 무료 공개보다는 수익을 고려한 비즈니스 모델로 변화하고 있다</li>                </ul>            </div>
         </div>
@@ -282,7 +362,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 15</div>
-                <img src="slides/slide_015.png" class="slide-image" alt="슬라이드 15" loading="lazy">            </div>
+                <img src="slides/slide_015.jpg" class="slide-image" alt="슬라이드 15" loading="lazy" onclick="openLightbox('slides/slide_015.jpg', 15)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델(젠마 등)의 성능 격차가 좁혀질지에 대한 청중 의견이 분분함</li>                    <li>강연자는 하이레벨에서는 기술이 평준화될 것으로 예상한다고 봄</li>                    <li>각국의 R&D 투자와 엔지니어 이동이 기술 격차 해소 요인으로 작용</li>                    <li>참석자는 GPU 성능 향상과 지속적 고수준 투자 필요로 인해 격차가 벌어질 수 있다고 의견 제시</li>                </ul>            </div>
         </div>
@@ -290,7 +370,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 16</div>
-                <img src="slides/slide_016.png" class="slide-image" alt="슬라이드 16" loading="lazy">            </div>
+                <img src="slides/slide_016.jpg" class="slide-image" alt="슬라이드 16" loading="lazy" onclick="openLightbox('slides/slide_016.jpg', 16)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 기술 격차를 줄이기 어려운 주요 요소로 연봉 격차와 데이터 격차가 존재한다</li>                    <li>오픈AI는 한국의 2-3천만 ChatGPT 사용자들의 검색 패턴과 사용 데이터를 축적하고 있다</li>                    <li>높은 연봉으로 인해 대학원생들이 졸업 후 해외 기업으로 이직하여 기술 인재 유출이 발생한다</li>                    <li>메타의 라마(LLaMA)가 공개 소프트웨어 LM 진영에서 가장 유명한 모델이다</li>                    <li>메타가 상용 서비스를 시작하면서 오픈소스 진영과의 기술 격차 해소가 더욱 어려워질 전망이다</li>                </ul>            </div>
         </div>
@@ -298,7 +378,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 17</div>
-                <img src="slides/slide_017.png" class="slide-image" alt="슬라이드 17" loading="lazy">            </div>
+                <img src="slides/slide_017.jpg" class="slide-image" alt="슬라이드 17" loading="lazy" onclick="openLightbox('slides/slide_017.jpg', 17)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>기업들이 상용 LLM과 공개 LLM을 동시에 제공할 때, 공개 모델의 성능을 높이면 상용 서비스의 수익성이 감소하는 딜레마가 발생한다</li>                    <li>딥시크, 알리바바, 구글 등 대부분의 공개 LLM 제공 업체들이 동시에 클라우드 기반 상용 LLM 서비스도 운영하고 있다</li>                    <li>Meta의 라마(LLaMA)가 상용화 버전 출시를 발표하면서, 공개 모델과 상용 모델 간의 성능 격차가 더욱 벌어질 것으로 예상된다</li>                    <li>Apache, Linux와 같은 오픈소스 생태계처럼 LLM 분야에서도 순수한 공개 진영이 필요하지만, 현재는 그런 큰 진영이 형성되지 않은 상황이다</li>                </ul>            </div>
         </div>
@@ -306,7 +386,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 18</div>
-                <img src="slides/slide_018.png" class="slide-image" alt="슬라이드 18" loading="lazy">            </div>
+                <img src="slides/slide_018.jpg" class="slide-image" alt="슬라이드 18" loading="lazy" onclick="openLightbox('slides/slide_018.jpg', 18)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>LLM과 데이터 인덱싱은 일반적인 상식과 언어 번역 등 범용적 기능을 담당하지만, 제조/의료/금융 등 버티컬 도메인은 여전히 개발 여지가 남아있다</li>                    <li>구글의 20년간 웨이모 개발 경험을 통해 대기업들이 모든 도메인을 직접 개발하는 것의 한계를 인식하고 있다</li>                    <li>MCP 같은 플랫폼을 통해 도메인 전문성을 활용할 수 있는 1인 1창업 시대가 열릴 것으로 전망된다</li>                    <li>NVIDIA의 피지컬 AI는 GPU 집약적 환경을 필요로 하며, 코스모스 옴니버스 같은 시뮬레이션 기술을 중심으로 발전하고 있다</li>                    <li>대기업들이 대규모 GPU 클러스터(1만 장 규모)를 활용한 주요 용도는 공장 시뮬레이션, 소재 합성 등 다크 팩토리 구축이다</li>                </ul>            </div>
         </div>
@@ -314,7 +394,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 19</div>
-                <img src="slides/slide_019.png" class="slide-image" alt="슬라이드 19" loading="lazy">            </div>
+                <img src="slides/slide_019.jpg" class="slide-image" alt="슬라이드 19" loading="lazy" onclick="openLightbox('slides/slide_019.jpg', 19)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>중국 AI 기업들이 오픈소스를 지향한다고 알려져 있지만, 그 동기에 대해서는 면밀한 분석이 필요하다</li>                    <li>딥시크 등 중국 기업들이 공개하는 LLM 버전과 실제 서비스에서 사용하는 버전이 항상 동일하지는 않을 가능성이 있다</li>                    <li>모델을 완전히 공개하는 기업들은 보통 AGI 개발과 같은 야심찬 목표를 가지고 있다</li>                    <li>샘 알트만처럼 투자받은 자금을 AGI 개발이라는 목표에 집중하겠다는 전략적 접근이 존재한다</li>                </ul>            </div>
         </div>
@@ -322,7 +402,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 20</div>
-                <img src="slides/slide_020.png" class="slide-image" alt="슬라이드 20" loading="lazy">            </div>
+                <img src="slides/slide_020.jpg" class="slide-image" alt="슬라이드 20" loading="lazy" onclick="openLightbox('slides/slide_020.jpg', 20)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>딥시크의 중국어 성능은 바이두, 텐센트 대비 중국 내 점유율이나 성능에서 우위를 보이지 않는다는 평가가 있음</li>                    <li>LLM 서비스 구현 시 엔진뿐만 아니라 RAG, 검색, 요약, UX 등 전체 시스템이 중요함</li>                    <li>검색과 인덱싱이 LLM 서비스에서 핵심적인 역할을 하며, 이는 기존 검색 기술과 유사한 특성을 가짐</li>                    <li>AI를 활용한 공격 코드 생성으로 인한 보안 취약점 증가가 주요 이슈로 대두되고 있음</li>                </ul>            </div>
         </div>
@@ -330,7 +410,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 21</div>
-                <img src="slides/slide_021.png" class="slide-image" alt="슬라이드 21" loading="lazy">            </div>
+                <img src="slides/slide_021.jpg" class="slide-image" alt="슬라이드 21" loading="lazy" onclick="openLightbox('slides/slide_021.jpg', 21)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>국내 기업들이 AI를 이용한 해킹 공격으로 인해 보안 사고가 증가하고 있으며, AI로 공격하면 AI로 방어해야 하는 상황이 되었다</li>                    <li>AI 서비스 사용량이 계속 증가할 것이며, 이는 더 많은 서비스 이용료 지출을 의미한다</li>                    <li>국내 중견·대기업들이 OpenAI나 Google의 LLM 사용 계약을 통해 막대한 사용료를 지불하고 있다</li>                    <li>AI 서비스 사용으로 창출된 재화가 해외 기업으로 유출되고 있어, 국내 AI 소프트웨어 밸류체인 구축이 필요하다</li>                    <li>미래 양질의 일자리 창출을 위해서는 국내 AI 소프트웨어 기업 육성이 중요하다</li>                </ul>            </div>
         </div>
@@ -338,7 +418,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 22</div>
-                <img src="slides/slide_022.png" class="slide-image" alt="슬라이드 22" loading="lazy">            </div>
+                <img src="slides/slide_022.jpg" class="slide-image" alt="슬라이드 22" loading="lazy" onclick="openLightbox('slides/slide_022.jpg', 22)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>전 세계 소프트웨어 회사 시가총액 상위 10개 중 대부분이 미국 회사이다</li>                    <li>독일의 SAP가 유일하게 미국이 아닌 회사로 상위 10위 안에 포함되어 있다</li>                    <li>SAP는 전 세계 ERP 시스템을 거의 독점하고 있는 회사이다</li>                    <li>ERP의 핵심 기능은 회사의 자원 관리(사람, 돈 등)이다</li>                    <li>스타트업과 같은 작은 회사들은 SAP 대신 다른 솔루션을 사용한다</li>                </ul>            </div>
         </div>
@@ -346,7 +426,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 23</div>
-                <img src="slides/slide_023.png" class="slide-image" alt="슬라이드 23" loading="lazy">            </div>
+                <img src="slides/slide_023.jpg" class="slide-image" alt="슬라이드 23" loading="lazy" onclick="openLightbox('slides/slide_023.jpg', 23)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>스타트업들은 SAP 대신 엑셀, Slack, Monday, Salesforce 등 경량화된 도구로 인사관리를 수행한다</li>                    <li>AI를 활용한 개인 맞춤형 업무 지시 및 관리 시스템이 미국 스타트업을 중심으로 발전하고 있다</li>                    <li>실리콘밸리와 독일(SAP) 간 인사경영관리 소프트웨어 시장에서 경쟁이 치열해지고 있다</li>                    <li>ChatGPT는 이미 많은 외국 기업의 AI 인사평가 데이터로 학습되어 이력서 평가 능력이 고도화되었다</li>                    <li>미국에서는 AI를 통한 업무평가, 코드 품질, 영업 성과 등 종합적 인사관리가 발달했지만, 보수적 금융업계는 변화 속도가 느리다</li>                </ul>            </div>
         </div>
@@ -354,7 +434,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 24</div>
-                <img src="slides/slide_024.png" class="slide-image" alt="슬라이드 24" loading="lazy">            </div>
+                <img src="slides/slide_024.jpg" class="slide-image" alt="슬라이드 24" loading="lazy" onclick="openLightbox('slides/slide_024.jpg', 24)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>이력서 분석 서비스의 성능은 미국에서의 서비스 경험과 축적된 템플릿 데이터에 기반한다</li>                    <li>ERP 시장이 AI 도입에 큰 영향을 미치고 있으며, SAP 등 대형 업체와 스타트업 간의 경쟁이 심화되고 있다</li>                    <li>세계경제포럼 등대공장 29개 공장의 145개 기술 중 47%가 AI 기술로 구성되어 있다</li>                    <li>CATL, 보쉬, 하이얼 등은 AI를 활용해 광학 검사, 장비 효율성 향상, 에너지 소비 절감 등을 달성했다</li>                    <li>한국의 등대공장은 포스코, LS일렉트릭, LG 창원공장, 아모레퍼시픽이 선정되었으며 추가 선정을 위한 노력이 지속되고 있다</li>                </ul>            </div>
         </div>
@@ -362,7 +442,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 25</div>
-                <img src="slides/slide_025.png" class="slide-image" alt="슬라이드 25" loading="lazy">            </div>
+                <img src="slides/slide_025.jpg" class="slide-image" alt="슬라이드 25" loading="lazy" onclick="openLightbox('slides/slide_025.jpg', 25)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한국의 제조업은 현재 잘 나가고 있지만 당사자들이 이를 충분히 인식하지 못하고 있다</li>                    <li>설계나 드론 등 일부 분야에서는 부족함이 있으나, 촘촘한 정밀 제조 분야에서는 한국의 역량이 잘 축적되어 있다</li>                    <li>금융 분야에서는 인증 검토 등을 AI로 처리하고 영업점이 줄어드는 추세이다</li>                    <li>로보 어드바이저의 실제 투자 성과에 대해서는 시장 불확실성으로 인해 의문이 있다</li>                    <li>디지털 헬스 분야와 관련하여 경기 상황이 점진적으로 개선되고 있다고 판단한다</li>                </ul>            </div>
         </div>
@@ -370,7 +450,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 26</div>
-                <img src="slides/slide_026.png" class="slide-image" alt="슬라이드 26" loading="lazy">            </div>
+                <img src="slides/slide_026.jpg" class="slide-image" alt="슬라이드 26" loading="lazy" onclick="openLightbox('slides/slide_026.jpg', 26)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 투자 시장이 불황을 겪고 있으며, 미래 전망만으로는 투자받기 어려운 상황</li>                    <li>투자자들이 실제 매출 실적을 요구하는 경향이 강화됨</li>                    <li>시장 압박 속에서도 실제 매출을 내는 AI 회사들이 증가하고 있음</li>                    <li>루노, 뷰닛, 마키나라스 등 AI 회사들이 전년 대비 매출 성장을 보임</li>                    <li>금융권에서 LLM(대규모 언어모델) 도입이 활발히 이루어지고 있음</li>                </ul>            </div>
         </div>
@@ -378,7 +458,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 27</div>
-                <img src="slides/slide_027.png" class="slide-image" alt="슬라이드 27" loading="lazy">            </div>
+                <img src="slides/slide_027.jpg" class="slide-image" alt="슬라이드 27" loading="lazy" onclick="openLightbox('slides/slide_027.jpg', 27)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>금융권에서 콜센터 LLM 도입이 작년에 크게 호황을 이루었음</li>                    <li>카드회사의 경우 연간 콜센터 운영비 1천억원을 LLM 구축비용 400억원으로 대체하여 비용 절감을 추진</li>                    <li>모든 금융회사와 계열사들이 순차적으로 콜센터 LLM 프로젝트를 진행 중</li>                    <li>실제 현장에서는 아직 복잡한 상담에서 AI가 완전히 대체되지 못하고 있는 상황</li>                    <li>AI 시장에서 금융 분야가 가장 큰 시장 규모를 차지하고 있음</li>                </ul>            </div>
         </div>
@@ -386,7 +466,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 28</div>
-                <img src="slides/slide_028.png" class="slide-image" alt="슬라이드 28" loading="lazy">            </div>
+                <img src="slides/slide_028.jpg" class="slide-image" alt="슬라이드 28" loading="lazy" onclick="openLightbox('slides/slide_028.jpg', 28)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 활용 분야 순위에서 금융이 1위, 제조가 2위, 의료가 3위, 국방/자율주행이 4위를 차지한다</li>                    <li>디지털 헬스 시장에서 AI의 활용 영역이 매우 광범위하다</li>                    <li>병원에서 AI 엑스레이 판독 시스템이 실제로 활용되고 있으며, 의사가 무시할 수 없을 정도로 신뢰성을 가지고 있다</li>                    <li>AI 시스템이 위험을 예측했지만 의사가 발견하지 못한 징후가 있었고, 결과적으로 예측이 빗나간 사례가 존재한다</li>                    <li>의료 AI 시스템이 의사결정 근거를 설명할 수 있는 설명 가능한 인공지능 기능이 필요하다</li>                </ul>            </div>
         </div>
@@ -394,7 +474,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 29</div>
-                <img src="slides/slide_029.png" class="slide-image" alt="슬라이드 29" loading="lazy">            </div>
+                <img src="slides/slide_029.jpg" class="slide-image" alt="슬라이드 29" loading="lazy" onclick="openLightbox('slides/slide_029.jpg', 29)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI의 가장 부정적인 효과는 개인적 피해가 아닌 방산 분야 적용이라는 관점 제시</li>                    <li>전쟁 상황에서는 평화적 AI 개발 원칙과 달리 공격적 AI 시스템이 실제로 활용됨</li>                    <li>AI 기반 자율 드론이 인간 조작 드론보다 더 많은 피해를 야기할 수 있음</li>                    <li>세계경제포럼의 AI 시스템 개발 공통 프랙티스는 '데이터 학습 → 행동 → 최적화' 순서</li>                </ul>            </div>
         </div>
@@ -402,7 +482,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 30</div>
-                <img src="slides/slide_030.png" class="slide-image" alt="슬라이드 30" loading="lazy">            </div>
+                <img src="slides/slide_030.jpg" class="slide-image" alt="슬라이드 30" loading="lazy" onclick="openLightbox('slides/slide_030.jpg', 30)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 학습은 수많은 실패를 통해 최적화되는 과정이다</li>                    <li>MIT 연구에 따르면 생성형 AI의 현장 도입 성공률은 약 5%에 불과하다</li>                    <li>대기업에서 50개의 AI 프로젝트 중 실제 현장에 적용되는 것은 2-3개 정도이다</li>                    <li>AI 프로젝트의 현장 적용률이 낮은 이유에 대한 문제 제기가 이루어졌다</li>                </ul>            </div>
         </div>
@@ -410,7 +490,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 31</div>
-                <img src="slides/slide_031.png" class="slide-image" alt="슬라이드 31" loading="lazy">            </div>
+                <img src="slides/slide_031.jpg" class="slide-image" alt="슬라이드 31" loading="lazy" onclick="openLightbox('slides/slide_031.jpg', 31)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>방법론 적용 시 세팅에 많은 시간이 소요되는 문제가 있음</li>                    <li>5% 수치를 높이는 여러 가지 방법들이 존재함</li>                    <li>파운데이션 모델은 기본적으로 서비스 데이터를 학습하지 않는 것으로 알려져 있음</li>                    <li>서비스 데이터를 학습 데이터로 사용하는 정책은 나라와 회사마다 다름</li>                    <li>익명화된 데이터의 경우 학습에 활용할 수 있다는 견해가 있음</li>                </ul>            </div>
         </div>
@@ -418,7 +498,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 32</div>
-                <img src="slides/slide_032.png" class="slide-image" alt="슬라이드 32" loading="lazy">            </div>
+                <img src="slides/slide_032.jpg" class="slide-image" alt="슬라이드 32" loading="lazy" onclick="openLightbox('slides/slide_032.jpg', 32)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>기업의 데이터 활용 시 익명화 처리를 통해 개인정보 보호와 활용 사이의 균형을 맞추는 방식이 국가별로 차이가 있다</li>                    <li>매출 규모가 큰 기업(구글 등)과 스타트업 간에 데이터 활용 방식과 신중함의 정도가 다르다</li>                    <li>웨이모는 구글의 영향으로 소송 리스크를 고려하여 모델 출시와 데이터 사용에 더욱 신중한 접근을 취한다</li>                    <li>현대차는 웨이모에 차량을 납품하지만 웨이모의 자율주행 기술을 적극적으로 활용하지는 못하고 있는 상황이다</li>                    <li>현대차의 자율주행 개발에서 임원 교체가 빈번하고 성과 창출에 어려움을 겪고 있어 웨이모 기술 활용에 대한 필요성이 제기된다</li>                </ul>            </div>
         </div>
@@ -426,7 +506,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 33</div>
-                <img src="slides/slide_033.png" class="slide-image" alt="슬라이드 33" loading="lazy">            </div>
+                <img src="slides/slide_033.jpg" class="slide-image" alt="슬라이드 33" loading="lazy" onclick="openLightbox('slides/slide_033.jpg', 33)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>현재 웨이모와의 사업적 관계가 있음에도 불구하고 적극적인 협력은 이루어지지 않고 있음</li>                    <li>ING 6를 웨이모와 함께 납품하여 사용하는 방식을 제안함</li>                    <li>자율주행 자동차 시장에서 현대차와 웨이모의 자율주행 기술이 경쟁 관계에 있음</li>                    <li>고객 관점에서 현대차-웨이모 합작품이 나올 경우 구매 가능성이 높을 것으로 예상됨</li>                </ul>            </div>
         </div>
@@ -434,7 +514,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 34</div>
-                <img src="slides/slide_034.png" class="slide-image" alt="슬라이드 34" loading="lazy">            </div>
+                <img src="slides/slide_034.jpg" class="slide-image" alt="슬라이드 34" loading="lazy" onclick="openLightbox('slides/slide_034.jpg', 34)">            </div>
             <div class="slide-right">
                 <p class="no-points">(내용 없음)</p>            </div>
         </div>
@@ -442,7 +522,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 35</div>
-                <img src="slides/slide_035.png" class="slide-image" alt="슬라이드 35" loading="lazy">            </div>
+                <img src="slides/slide_035.jpg" class="slide-image" alt="슬라이드 35" loading="lazy" onclick="openLightbox('slides/slide_035.jpg', 35)">            </div>
             <div class="slide-right">
                 <p class="no-points">(내용 없음)</p>            </div>
         </div>
@@ -450,7 +530,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 36</div>
-                <img src="slides/slide_036.png" class="slide-image" alt="슬라이드 36" loading="lazy">            </div>
+                <img src="slides/slide_036.jpg" class="slide-image" alt="슬라이드 36" loading="lazy" onclick="openLightbox('slides/slide_036.jpg', 36)">            </div>
             <div class="slide-right">
                 <p class="no-points">(내용 없음)</p>            </div>
         </div>
@@ -458,7 +538,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 37</div>
-                <img src="slides/slide_037.png" class="slide-image" alt="슬라이드 37" loading="lazy">            </div>
+                <img src="slides/slide_037.jpg" class="slide-image" alt="슬라이드 37" loading="lazy" onclick="openLightbox('slides/slide_037.jpg', 37)">            </div>
             <div class="slide-right">
                 <p class="no-points">(내용 없음)</p>            </div>
         </div>
@@ -466,7 +546,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 38</div>
-                <img src="slides/slide_038.png" class="slide-image" alt="슬라이드 38" loading="lazy">            </div>
+                <img src="slides/slide_038.jpg" class="slide-image" alt="슬라이드 38" loading="lazy" onclick="openLightbox('slides/slide_038.jpg', 38)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 프로젝트에서 나타나는 5%의 벽은 모든 사람에게 동일하게 적용되는 것이 아니라 피할 수 있는 방법이 존재한다</li>                    <li>AI 프로젝트가 실패하는 주요 원인은 처음 해보는 프로젝트임에도 쉽게 될 것이라고 과신하고 현업 업무를 쉽게 대체할 수 있다고 생각하는 것이다</li>                    <li>5%의 벽에서 가장 큰 제약 조건은 기술이 아닌 '사람'이다</li>                </ul>            </div>
         </div>
@@ -474,7 +554,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 39</div>
-                <img src="slides/slide_039.png" class="slide-image" alt="슬라이드 39" loading="lazy">            </div>
+                <img src="slides/slide_039.jpg" class="slide-image" alt="슬라이드 39" loading="lazy" onclick="openLightbox('slides/slide_039.jpg', 39)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 프로젝트 도입 시 사람 업무를 자동화할 것이라는 기대와 달리, 실제로는 복잡한 의사결정 영역이 남아있다</li>                    <li>제조, 의료, 금융 등 어떤 분야든 최종 단계에서는 사람이 복잡한 의사결정을 해야 하는 업무가 존재한다</li>                    <li>컴퓨터 비전의 얼굴 인식과 같은 기술은 정형화된 문제 해결에는 효과적이지만, 예외적 상황에는 한계가 있다</li>                    <li>사람의 업무 중 상당 부분은 암묵지(tacit knowledge)에 기반하여 매뉴얼화하기 어려운 영역이다</li>                    <li>업무를 자동화하려 할 때 어느 정도까지는 가능하지만, 깊이 들어가면 자동화할 수 없는 복잡한 판단 영역이 나타난다</li>                </ul>            </div>
         </div>
@@ -482,7 +562,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 40</div>
-                <img src="slides/slide_040.png" class="slide-image" alt="슬라이드 40" loading="lazy">            </div>
+                <img src="slides/slide_040.jpg" class="slide-image" alt="슬라이드 40" loading="lazy" onclick="openLightbox('slides/slide_040.jpg', 40)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 자동화는 완전자동화가 어려워 단위 인지 문제로 분해하거나 LLM을 활용한 반자동화 방식으로 접근해야 함</li>                    <li>LLM은 헐루시네이션 문제로 인해 사람의 검토가 필요한 반자동화 시스템으로 활용됨</li>                    <li>버티컬 AI 개발에서는 도메인 전문성이 핵심 성공 요소임</li>                    <li>1인 창업 시 ChatGPT나 Gemini의 파인튜닝을 활용하는 것이 가장 효율적인 방법</li>                    <li>파인튜닝에서 모델 학습보다 양질의 학습 데이터를 만드는 작업이 더 어렵고 중요함</li>                </ul>            </div>
         </div>
@@ -490,7 +570,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 41</div>
-                <img src="slides/slide_041.png" class="slide-image" alt="슬라이드 41" loading="lazy">            </div>
+                <img src="slides/slide_041.jpg" class="slide-image" alt="슬라이드 41" loading="lazy" onclick="openLightbox('slides/slide_041.jpg', 41)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>지원자 평가 시스템에서 성적표, 포트폴리오, 지원서 등 다양한 형태의 데이터를 LLM에 입력으로 사용한다</li>                    <li>평가 결과로 능력, 경력 연수, 친화력, 인성 등 다차원적인 평가 지표를 산출한다</li>                    <li>기존 머신러닝 프로젝트와 달리 학습 결과가 JSON 형태의 다중 출력(multiple outputs)으로 구성된다</li>                    <li>평가 항목 중 일부는 비어있을 수 있어 결측값 처리가 필요하다</li>                </ul>            </div>
         </div>
@@ -498,7 +578,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 42</div>
-                <img src="slides/slide_042.png" class="slide-image" alt="슬라이드 42" loading="lazy">            </div>
+                <img src="slides/slide_042.jpg" class="slide-image" alt="슬라이드 42" loading="lazy" onclick="openLightbox('slides/slide_042.jpg', 42)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>LLM을 활용한 평가 시스템에서는 파일들을 테이블 형태로 구성하여 각 행이 한 사람의 데이터가 되도록 구조화한다</li>                    <li>머신러닝 프로젝트처럼 여러 파일과 해당 평가 결과를 매칭시켜 데이터셋을 구성한다</li>                    <li>LLM 평가 과정에서 중간 단계(intermediate state)를 만드는 방법을 사용할 수 있다</li>                    <li>이력서, 포트폴리오, 성적표 등의 문서와 job description을 기반으로 각 평가 항목에 대한 경험 유무와 기간을 분석한다</li>                    <li>LLM이 다양한 파일을 종합하여 개인별로 학력, 프로젝트 경험, 직무 경험 등을 O/X 형태로 요약 평가한다</li>                </ul>            </div>
         </div>
@@ -506,7 +586,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 43</div>
-                <img src="slides/slide_043.png" class="slide-image" alt="슬라이드 43" loading="lazy">            </div>
+                <img src="slides/slide_043.jpg" class="slide-image" alt="슬라이드 43" loading="lazy" onclick="openLightbox('slides/slide_043.jpg', 43)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>복잡한 멀티모달 입력(OX표 등)을 텍스트로 변환하여 AI가 평가 텍스트를 생성할 수 있다</li>                    <li>500명의 평가 데이터를 OpenAI나 Google에 제공하여 GPT-4나 GPT-5 기반 모델을 파인튜닝할 수 있다</li>                    <li>파인튜닝을 통해 특정 개인의 평가 방식을 학습한 맞춤형 AI 모델(예: ChatGPT 최재식 버전)을 만들 수 있다</li>                    <li>기밀정보나 암묵지 같은 도메인 특화 정보를 학습시켜 해당 분야에 특화된 답변을 제공하는 수직화(Vertical) AI 서비스가 가능하다</li>                    <li>이러한 맞춤형 AI 서비스는 상업적 가치를 가지며 유료 서비스로 판매할 수 있다</li>                </ul>            </div>
         </div>
@@ -514,7 +594,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 44</div>
-                <img src="slides/slide_044.png" class="slide-image" alt="슬라이드 44" loading="lazy">            </div>
+                <img src="slides/slide_044.jpg" class="slide-image" alt="슬라이드 44" loading="lazy" onclick="openLightbox('slides/slide_044.jpg', 44)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>커스텀 AI 모델을 만든 후 ChatGPT처럼 엔진 선택이 가능한 서비스 형태로 제공할 수 있다</li>                    <li>특정 도메인(인사, 회계, 제조, 금융 등)에 특화된 LLM 서비스를 통해 1인 창업이 가능해질 것이다</li>                    <li>빅테크 기업도 모든 버티컬 데이터를 수집하기 어렵고, 서로 다른 도메인 데이터를 함께 학습시키면 모델이 망가질 수 있다</li>                    <li>도메인 전문성이 있는 사람들(회계, 제조, 금융, 인사, 한국문화 등)이 에이전트 AI 창업에 유리하다</li>                    <li>데이터 수집과 학습 정교화에 상당한 엔지니어링 작업이 필요하다</li>                </ul>            </div>
         </div>
@@ -522,7 +602,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 45</div>
-                <img src="slides/slide_045.png" class="slide-image" alt="슬라이드 45" loading="lazy">            </div>
+                <img src="slides/slide_045.jpg" class="slide-image" alt="슬라이드 45" loading="lazy" onclick="openLightbox('slides/slide_045.jpg', 45)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI는 텍스트 요약 능력이 뛰어나므로 한두 페이지 분량으로도 다양한 정보를 효과적으로 담을 수 있다</li>                    <li>빅테크 플랫폼을 활용하여 로컬 버티컬 AI 서비스를 글로벌로 확장하는 방향이 가능하다</li>                    <li>한국의 앱 게임이나 유튜브 콘텐츠가 글로벌 진출한 것처럼 AI 서비스에서도 비슷한 패턴이 나타날 것으로 예상된다</li>                    <li>국내 대기업들의 엔터프라이즈 인프라는 이미 클라우드로 많이 이전된 상태이다</li>                    <li>제조업에서 AI 도입 시 과거와 달리 생산부터 사용자 활용까지 전체 프로세스를 고려하는 방향으로 변화하고 있다</li>                </ul>            </div>
         </div>
@@ -530,7 +610,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 46</div>
-                <img src="slides/slide_046.png" class="slide-image" alt="슬라이드 46" loading="lazy">            </div>
+                <img src="slides/slide_046.jpg" class="slide-image" alt="슬라이드 46" loading="lazy" onclick="openLightbox('slides/slide_046.jpg', 46)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 시대에는 빌드 타임 생산 최적화에서 런타임 최적화로 패러다임이 전환되고 있다</li>                    <li>자율주행차와 스마트워치 같은 기기들이 실시간으로 사용자 데이터를 수집하고 분석한다</li>                    <li>AI가 24시간 개인 비서 역할을 하며 이메일 요약, 건강 모니터링 등 일상생활 전반에 관여한다</li>                    <li>AI는 언어를 이해하게 되면서 인간 곁에서 더 많은 역할을 수행할 수 있게 되었다</li>                    <li>AI 거품은 존재하지만, 불황을 통해 실제 매출과 실용성이 있는 AI 서비스들이 더 주목받고 있다</li>                </ul>            </div>
         </div>
@@ -538,7 +618,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 47</div>
-                <img src="slides/slide_047.png" class="slide-image" alt="슬라이드 47" loading="lazy">            </div>
+                <img src="slides/slide_047.jpg" class="slide-image" alt="슬라이드 47" loading="lazy" onclick="openLightbox('slides/slide_047.jpg', 47)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>네트워크 연결의 두 가지 핵심 기능은 리모트 사람과의 연결과 정보 수집이다</li>                    <li>AI 의존도가 높아질수록 AI 없이는 불편함을 느끼게 될 것이다</li>                    <li>카카오는 사람 연결 서비스, ChatGPT는 정보 수집 서비스의 대표적 예시다</li>                    <li>AI의 역할은 똑똑하게 사람을 연결하고 똑똑하게 정보를 가져오는 것이다</li>                    <li>구글 검색에서 ChatGPT로 발전한 것처럼, 더 나은 AI 서비스에 익숙해지면 이전 방식으로 돌아가기 어렵다</li>                </ul>            </div>
         </div>
@@ -546,7 +626,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 48</div>
-                <img src="slides/slide_048.png" class="slide-image" alt="슬라이드 48" loading="lazy">            </div>
+                <img src="slides/slide_048.jpg" class="slide-image" alt="슬라이드 48" loading="lazy" onclick="openLightbox('slides/slide_048.jpg', 48)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI는 금융, 제조, 모빌리티 등 각 서비스 분야에 부착되어 똑똑한 정보를 소비자에게 제공하는 역할을 한다</li>                    <li>AI가 없으면 정보 처리가 덜 똑똑해지고 불편해지며, AI가 있으면 더 빠르고 정확한 서비스가 가능하다</li>                    <li>AI 시대의 실제 구현 방식은 하나의 초지능 센터가 아니라 다양한 서비스 프로바이더마다 AI가 개별적으로 부착되는 형태이다</li>                    <li>서비스 프로바이더들은 고객 시간 점유율을 높이기 위해 AI를 활용하며, 이로 인한 일자리 창출이 중요하다</li>                    <li>보험 청구, 디자인 어워드, 수요 예측 및 판매 예측 등 다양한 실무 영역에서 AI가 정교하게 활용되고 있다</li>                </ul>            </div>
         </div>
@@ -554,7 +634,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 49</div>
-                <img src="slides/slide_049.png" class="slide-image" alt="슬라이드 49" loading="lazy">            </div>
+                <img src="slides/slide_049.jpg" class="slide-image" alt="슬라이드 49" loading="lazy" onclick="openLightbox('slides/slide_049.jpg', 49)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>히다치 회사 사례에서 세탁기 타입별(드럼형, 세로형, 일반형, 고급형) 수요 예측을 수행</li>                    <li>보너스 지급, 결혼 시즌, 유가 변동 등 다양한 외부 변수가 가전제품 수요에 미치는 영향을 주 단위로 정교하게 분석</li>                    <li>설명 가능 인공지능은 성능보다는 사용성과 법적 규제 대응 측면에서 중요함</li>                    <li>EU GDPR, AI법 등에서 고위험 AI의 자동화된 의사결정에 대해 소비자 설명 요구권을 보장</li>                    <li>국내 개인정보보호법도 2024년 3월부터 AI 의사결정에 대한 설명 의무가 시행됨</li>                </ul>            </div>
         </div>
@@ -562,7 +642,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 50</div>
-                <img src="slides/slide_050.png" class="slide-image" alt="슬라이드 50" loading="lazy">            </div>
+                <img src="slides/slide_050.jpg" class="slide-image" alt="슬라이드 50" loading="lazy" onclick="openLightbox('slides/slide_050.jpg', 50)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>EU AI 규정에서 고객이 설명을 요구할 경우, 자동화된 의사결정을 중단하고 사람이 처리하거나 설명을 제공해야 함</li>                    <li>EU AI 규정 위반 시 전 세계 매출의 6%에 해당하는 높은 벌금이 부과됨</li>                    <li>기존 서비스와 AI 서비스 모두 결정론적이지만, 출력에 대한 예측 가능성에서 근본적인 차이가 있음</li>                    <li>기존 제품(핸드폰, TV 등)은 사용자가 예상하는 대로 작동해야 하며, 그렇지 않으면 불편함을 초래함</li>                    <li>AI 서비스(ChatGPT 등)는 질문 전에 어떤 답변을 할지 예측하기 어려운 특성을 가짐</li>                </ul>            </div>
         </div>
@@ -570,7 +650,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 51</div>
-                <img src="slides/slide_051.png" class="slide-image" alt="슬라이드 51" loading="lazy">            </div>
+                <img src="slides/slide_051.jpg" class="slide-image" alt="슬라이드 51" loading="lazy" onclick="openLightbox('slides/slide_051.jpg', 51)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>의사가 환자 진단 시 바이러스, 유전적 요인, 세균 감염 등 모든 상황을 고려해야 하는 것처럼, AI도 다양한 관점을 제시해야 한다</li>                    <li>우리가 AI에게 원하는 것은 예측하지 못한 부분의 답변을 제공하는 것이다</li>                    <li>AI의 유용성은 두 가지 형태로 나타난다: 전문가만 알고 있는 깊은 지식의 제공, 또는 일반적이고 합리적인 관점의 제시</li>                    <li>사용자가 불확실한 상황에서 AI가 같은 의견을 제시하면 확신을 주고, 다른 의견을 제시하면 재고할 기회를 제공한다</li>                    <li>AI의 핵심 가치는 넓이든 깊이든 관계없이 예측 불가능한 답변을 통해 효용을 제공하는 것이다</li>                </ul>            </div>
         </div>
@@ -578,7 +658,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 52</div>
-                <img src="slides/slide_052.png" class="slide-image" alt="슬라이드 52" loading="lazy">            </div>
+                <img src="slides/slide_052.jpg" class="slide-image" alt="슬라이드 52" loading="lazy" onclick="openLightbox('slides/slide_052.jpg', 52)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI가 예측 불가능한 답변을 줄 때 실제 효용이 생기지만 동시에 틀릴 가능성도 존재한다</li>                    <li>AI가 틀렸을 때 그 결과에 대한 추론 과정과 합리적 근거를 설명할 수 있어야 다음 단계로 발전할 수 있다</li>                    <li>설명 가능한 AI는 결론에 도달한 이유, 성공과 실패의 원인을 모두 설명할 수 있어야 한다</li>                    <li>신뢰할 수 있는 AI(Trustworthy AI)가 현재 사회에서 중요한 화두가 되고 있다</li>                    <li>한국 사회에서 AI의 신뢰성과 투명성에 대한 논의가 활발한 이유는 한국인의 높은 주체성과 관련이 있다</li>                </ul>            </div>
         </div>
@@ -586,7 +666,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 53</div>
-                <img src="slides/slide_053.png" class="slide-image" alt="슬라이드 53" loading="lazy">            </div>
+                <img src="slides/slide_053.jpg" class="slide-image" alt="슬라이드 53" loading="lazy" onclick="openLightbox('slides/slide_053.jpg', 53)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 신뢰성의 핵심 요소로 Fairness(공정성), Robustness(강건성), Privacy(개인정보보호), Safety(안전성), Responsibility(책임성), Transparency(투명성), Explainability(설명가능성)가 있다</li>                    <li>빅테크 기업들은 LLM의 개인정보 보호와 AI 안전성 확보를 위해 세이프가드 개발에 막대한 자원을 투입하고 있다</li>                    <li>AI 시스템 사고 발생 시 제조사와 사용자 간 책임 소재를 명확히 구분하는 것이 중요하다</li>                    <li>설명가능성은 AI가 특정 판단을 내린 근거와 이유를 사용자가 이해할 수 있도록 제공하는 기술이다</li>                    <li>자율주행차와 같은 AI 시스템에서 의사결정 과정을 시각적으로 표현하여 투명성을 확보하는 방법이 연구되고 있다</li>                </ul>            </div>
         </div>
@@ -594,7 +674,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 54</div>
-                <img src="slides/slide_054.png" class="slide-image" alt="슬라이드 54" loading="lazy">            </div>
+                <img src="slides/slide_054.jpg" class="slide-image" alt="슬라이드 54" loading="lazy" onclick="openLightbox('slides/slide_054.jpg', 54)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>초록색 표시는 AI가 핸들을 오른쪽, 직진, 왼쪽으로 조작하는 이유를 색깔로 시각화해주는 설명 가능한 AI 시스템이다</li>                    <li>자율주행 상황에서 운전자는 장애물을 인식했지만 AI가 아직 인식하지 못한 경우, 초록색 불빛의 유무로 AI의 상태를 파악할 수 있다</li>                    <li>AI 모델은 완벽하지 않기 때문에 학습 데이터에 없는 상황에서 예상치 못한 오류를 범할 수 있다</li>                    <li>설명 가능한 AI의 색깔 표시는 불완전한 시스템을 운영할 때 사용자에게 신뢰성을 제공하는 중요한 역할을 한다</li>                    <li>이러한 시각적 설명은 모델 디버깅 과정에서도 매우 중요한 도구가 된다</li>                </ul>            </div>
         </div>
@@ -602,7 +682,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 55</div>
-                <img src="slides/slide_055.png" class="slide-image" alt="슬라이드 55" loading="lazy">            </div>
+                <img src="slides/slide_055.jpg" class="slide-image" alt="슬라이드 55" loading="lazy" onclick="openLightbox('slides/slide_055.jpg', 55)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델의 설명성 연구에서 액티베이션 맥시미제이션(Activation Maximization) 기법을 사용하여 특정 뉴런의 역할을 분석한다</li>                    <li>입력 이미지를 변경하면서 특정 뉴런의 활성도를 최대화하는 입력을 찾아 해당 뉴런이 무엇을 담당하는지 파악한다</li>                    <li>실험 결과 각 뉴런이 개미, 바나나, 바퀴 등 특정 객체나 패턴을 감지하는 역할을 담당함을 발견했다</li>                    <li>여러 뉴런을 동시에 활성화시켜 원본 이미지에 새로운 객체(타워, 새 등)를 생성하는 것이 가능하다</li>                    <li>이러한 체계적 분석을 통해 신경망 내부의 각 뉴런이 수행하는 구체적 기능을 이해할 수 있게 되었다</li>                </ul>            </div>
         </div>
@@ -610,7 +690,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 56</div>
-                <img src="slides/slide_056.png" class="slide-image" alt="슬라이드 56" loading="lazy">            </div>
+                <img src="slides/slide_056.jpg" class="slide-image" alt="슬라이드 56" loading="lazy" onclick="openLightbox('slides/slide_056.jpg', 56)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>CNN의 초기 레이어는 망막과 같이 한 방향 엣지를 검출하고, 깊은 레이어로 갈수록 격자무늬, 꽃무늬 등 복잡한 패턴을 인식한다</li>                    <li>CNN은 계층적으로 단순한 특징에서 복잡한 객체(사람, 얼굴, 건물)까지 점진적으로 학습한다</li>                    <li>자동차 검출에서는 윈도우, 바디, 휠 등 부분별 특징을 선택적으로 인식하여 전체 객체를 검출한다</li>                    <li>CNN과 생성형 모델(GAN 등)은 각 레이어가 무엇을 학습하는지 시각화하여 해석할 수 있다</li>                    <li>CNN은 포스트잇 형태의 다차원 구조로, 특정 객체가 입력되면 해당 채널의 관련 영역에서 높은 활성화 값을 보인다</li>                </ul>            </div>
         </div>
@@ -618,7 +698,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 57</div>
-                <img src="slides/slide_057.png" class="slide-image" alt="슬라이드 57" loading="lazy">            </div>
+                <img src="slides/slide_057.jpg" class="slide-image" alt="슬라이드 57" loading="lazy" onclick="openLightbox('slides/slide_057.jpg', 57)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>CNN 모델에서 각 채널이 특정 객체나 특징을 감지하는 것을 시각화하여 분석할 수 있다</li>                    <li>ResNet-152, GoogLeNet, VGG 등 다양한 모델에서 특정 채널이 기차의 옆모습, 철길, 비행기 등을 감지하는 것을 확인했다</li>                    <li>네트워크 디스섹션(Network Dissection) 프로젝트를 통해 모델별로 각 채널이 무엇을 감지하는지 체계적으로 분석할 수 있다</li>                    <li>CNN 채널은 폴리시맨틱(다양한 객체 활성화)과 모노시맨틱(특정 객체만 활성화)으로 구분할 수 있다</li>                    <li>채널 분석을 통해 CNN 모델의 내부 동작 메커니즘과 특징 학습 과정을 이해할 수 있다</li>                </ul>            </div>
         </div>
@@ -626,7 +706,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 58</div>
-                <img src="slides/slide_058.png" class="slide-image" alt="슬라이드 58" loading="lazy">            </div>
+                <img src="slides/slide_058.jpg" class="slide-image" alt="슬라이드 58" loading="lazy" onclick="openLightbox('slides/slide_058.jpg', 58)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>CNN과 GNN에서 단일 채널 활성화를 모노시매틱, 다중 채널 활성화를 폴리시매틱이라고 구분한다</li>                    <li>생성형 모델에서는 각 채널의 활성화 값을 조작하여(0으로 만들거나 1로 만들거나) 특정 객체의 생성을 제어할 수 있다</li>                    <li>채널의 활성화 패턴과 최종 생성된 이미지를 비교하여 특정 채널이 어떤 객체(예: 나무)를 담당하는지 파악할 수 있다</li>                    <li>생성형 모델에서는 특정 채널 값을 조작하는 것이 픽셀 단위로 이미지를 직접 조작하는 것보다 효과적이고 편리하다</li>                    <li>채널 값을 높이거나 낮춤으로써 해당 객체의 존재 여부를 제어할 수 있어 생성형 모델 실험이 용이하다</li>                </ul>            </div>
         </div>
@@ -634,7 +714,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 59</div>
-                <img src="slides/slide_059.png" class="slide-image" alt="슬라이드 59" loading="lazy">            </div>
+                <img src="slides/slide_059.jpg" class="slide-image" alt="슬라이드 59" loading="lazy" onclick="openLightbox('slides/slide_059.jpg', 59)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>생성형 모델과 CNN 모델에서 각 채널이 무엇을 하는지 분석할 수 있다</li>                    <li>LLM에서 특정 레이어를 스킵하는 실험을 통해 모델의 내부 동작을 분석할 수 있다</li>                    <li>LLM의 세이프가드 메커니즘은 특정 레이어에서 작동한다</li>                    <li>인종차별적 질문에 대해 LLM이 거부 응답을 하는 것은 특정 레이어의 처리 결과이다</li>                    <li>해당 레이어를 스킵하면 세이프가드가 우회되어 부적절한 응답이 생성될 수 있다</li>                </ul>            </div>
         </div>
@@ -642,7 +722,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 60</div>
-                <img src="slides/slide_060.png" class="slide-image" alt="슬라이드 60" loading="lazy">            </div>
+                <img src="slides/slide_060.jpg" class="slide-image" alt="슬라이드 60" loading="lazy" onclick="openLightbox('slides/slide_060.jpg', 60)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델의 세이프가드는 입력 단계에서 막는 것과 출력 단계에서 막는 것 두 가지로 구분된다</li>                    <li>특정 노드를 스킵하는 실험을 통해 세이프가드 기능을 우회할 수 있음을 발견했다</li>                    <li>네 번째 노드가 인종차별적 농담 요청에 대해 거부 응답을 생성하는 역할을 담당한다는 것을 실험으로 확인했다</li>                    <li>노드별 활성화/비활성화 실험을 통해 각 노드의 구체적인 역할을 파악할 수 있다</li>                    <li>트랜스포머 구조는 어텐션과 다층 퍼셉트론 두 가지 주요 유닛으로 구성되어 있다</li>                </ul>            </div>
         </div>
@@ -650,7 +730,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 61</div>
-                <img src="slides/slide_061.png" class="slide-image" alt="슬라이드 61" loading="lazy">            </div>
+                <img src="slides/slide_061.jpg" class="slide-image" alt="슬라이드 61" loading="lazy" onclick="openLightbox('slides/slide_061.jpg', 61)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>어텐션 헤드는 벡터 버전의 디시전 트리 노드와 같은 역할을 수행한다</li>                    <li>인종차별적 표현이 감지되면 특정 어텐션 헤드가 활성화되어 해당 내용을 차단한다</li>                    <li>멀티레이어 퍼셉트론에는 '모른다고 해라'와 같은 안전장치 응답이 저장되어 있다</li>                    <li>트랜스포머는 룰 베이스 시스템과 유사하지만 벡터 기반으로 더 유연하게 작동한다</li>                    <li>트랜스포머의 세이프가드 기능은 다양한 조건들로부터 if-then 구조를 만드는 역할을 한다</li>                </ul>            </div>
         </div>
@@ -658,7 +738,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 62</div>
-                <img src="slides/slide_062.png" class="slide-image" alt="슬라이드 62" loading="lazy">            </div>
+                <img src="slides/slide_062.jpg" class="slide-image" alt="슬라이드 62" loading="lazy" onclick="openLightbox('slides/slide_062.jpg', 62)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>어텐션 헤드는 데이터베이스의 인덱싱 역할을 수행하여 멀티레이어 퍼셉트론에 저장된 정보를 효율적으로 검색한다</li>                    <li>특정 트랜스포머 유닛의 활성화 여부는 어텐션 헤드의 활성화 상태로 파악할 수 있다</li>                    <li>LLM은 수억 개의 파라미터를 가지고 있어 내부 구조 분석이 매우 복잡하다</li>                    <li>설명 가능 AI 툴에서 정보 변화(예: 미국 대통령 정보 업데이트)가 주요 과제이다</li>                </ul>            </div>
         </div>
@@ -666,7 +746,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 63</div>
-                <img src="slides/slide_063.png" class="slide-image" alt="슬라이드 63" loading="lazy">            </div>
+                <img src="slides/slide_063.jpg" class="slide-image" alt="슬라이드 63" loading="lazy" onclick="openLightbox('slides/slide_063.jpg', 63)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>LLM에서 정보가 업데이트될 때 기존 데이터를 수정하는 두 가지 방법이 있다 - 세이프가드 방식과 직접 데이터 수정 방식</li>                    <li>룰 기반 방식은 새로운 정보가 추가될 때마다 지속적으로 규칙을 추가해야 하는 번거로움이 있다</li>                    <li>직접 데이터 수정 방식은 정보가 모델 내부 여러 곳에 분산 저장되어 있어 정확한 위치를 찾기 어렵다는 문제가 있다</li>                    <li>LLM 엔지니어들이 실제로 헐루시네이션으로 인한 고객 불만을 처리할 때 이러한 데이터 수정 작업을 자주 수행한다</li>                    <li>전통적인 데이터베이스와 달리 LLM에서는 특정 정보가 어디에 저장되어 있는지 파악하기 어려워 데이터 수정이 복잡하다</li>                </ul>            </div>
         </div>
@@ -674,7 +754,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 64</div>
-                <img src="slides/slide_064.png" class="slide-image" alt="슬라이드 64" loading="lazy">            </div>
+                <img src="slides/slide_064.jpg" class="slide-image" alt="슬라이드 64" loading="lazy" onclick="openLightbox('slides/slide_064.jpg', 64)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>생성형 AI에서 잘못 생성된 이미지를 자동으로 수정하는 기술을 개발했다</li>                    <li>생성형 뉴럴 네트워크의 내부를 자동으로 고치는 연구를 진행했다</li>                    <li>Input Attribution은 노벨경제학상 수상자 Shapley의 이론을 AI에 적용한 개념이다</li>                    <li>각 픽셀이 분류 결과(고양이, 강아지 등)에 얼마나 기여하는지를 계산하는 기법이다</li>                    <li>설명 가능한 AI 알고리즘의 성능을 평가하기 위해 중요한 픽셀부터 제거하여 테스트하는 방법을 사용한다</li>                </ul>            </div>
         </div>
@@ -682,7 +762,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 65</div>
-                <img src="slides/slide_065.png" class="slide-image" alt="슬라이드 65" loading="lazy">            </div>
+                <img src="slides/slide_065.jpg" class="slide-image" alt="슬라이드 65" loading="lazy" onclick="openLightbox('slides/slide_065.jpg', 65)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>픽셀을 제거했을 때 인식 확률이 빠르게 떨어지는 픽셀일수록 모델 예측에 더 중요한 역할을 한다</li>                    <li>개발한 설명가능 AI 알고리즘이 구글의 알고리즘보다 더 정확하게 중요한 픽셀을 식별할 수 있다</li>                    <li>입력 기여도(Input Attribution)를 정교하게 계산하는 원천 기술을 개발하고 있다</li>                    <li>AI 생성 모델의 모드 콜렉스(Mode Collapse) 현상으로 다양성 부족 문제가 발생한다</li>                    <li>AI 모델 내 특정 노드의 활성화도를 조절하여 창의성과 다양성을 높일 수 있는 방법을 발견했다</li>                </ul>            </div>
         </div>
@@ -690,7 +770,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 66</div>
-                <img src="slides/slide_066.png" class="slide-image" alt="슬라이드 66" loading="lazy">            </div>
+                <img src="slides/slide_066.jpg" class="slide-image" alt="슬라이드 66" loading="lazy" onclick="openLightbox('slides/slide_066.jpg', 66)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>창의성 노드를 발견하고 이를 확장하면 다양한 창의적 이미지 생성이 가능하다</li>                    <li>외부 데이터셋 없이도 창의성을 발현할 수 있는 방법을 개발했다</li>                    <li>플러그인 플레이 설명 가능 인공지능 프로젝트를 진행하고 있다</li>                    <li>USB 표준처럼 디바이스 드라이버 없이도 작동하는 플러그인 방식을 AI에 적용하고자 한다</li>                </ul>            </div>
         </div>
@@ -698,7 +778,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 67</div>
-                <img src="slides/slide_067.png" class="slide-image" alt="슬라이드 67" loading="lazy">            </div>
+                <img src="slides/slide_067.jpg" class="slide-image" alt="슬라이드 67" loading="lazy" onclick="openLightbox('slides/slide_067.jpg', 67)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델을 자동으로 인식하여 텐서플로우나 파이토치 등의 프레임워크에 맞는 설명가능 AI 기법을 자동 적용하는 도구를 개발했다</li>                    <li>다양한 설명가능 AI 알고리즘 중에서 해당 모델에 가장 적합한 것을 자동으로 추천하는 시스템을 구현했다</li>                    <li>개발한 도구를 깃허브에 공개하여 PM PXN으로 다운로드 받아 사용할 수 있다</li>                    <li>시계열 데이터의 설명가능성에 관한 리뷰 논문을 ACM Computing Survey 저널에 발표했다</li>                    <li>GPT와 연동하여 금융 예측 서비스를 구현하고, 인증 기반으로 서비스를 공유할 수 있는 시스템을 개발했다</li>                </ul>            </div>
         </div>
@@ -706,7 +786,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 68</div>
-                <img src="slides/slide_068.png" class="slide-image" alt="슬라이드 68" loading="lazy">            </div>
+                <img src="slides/slide_068.jpg" class="slide-image" alt="슬라이드 68" loading="lazy" onclick="openLightbox('slides/slide_068.jpg', 68)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델이 금 가격 예측 시 S&P500, DAO, 미국 달러, 만기 국채 등의 요소를 고려하여 단기 조정 후 재상승을 예측한다</li>                    <li>AI 모델의 예측은 강연자 개인 의견과 다를 수 있으며, 독립적인 분석 결과를 제공한다</li>                    <li>ChatGPT를 활용하여 금융 서비스와 연동된 가격 예측 시스템을 구축했다</li>                    <li>ChatGPT의 포털 특성을 활용하여 자체 서비스를 통합하고, 표/그래프 생성, 엑셀 다운로드 등의 기능을 제공한다</li>                    <li>GPT를 엔진이 아닌 도구로 활용하여 자체 콘텐츠를 중심으로 한 서비스 모델을 구현했다</li>                </ul>            </div>
         </div>
@@ -714,7 +794,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 69</div>
-                <img src="slides/slide_069.png" class="slide-image" alt="슬라이드 69" loading="lazy">            </div>
+                <img src="slides/slide_069.jpg" class="slide-image" alt="슬라이드 69" loading="lazy" onclick="openLightbox('slides/slide_069.jpg', 69)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>데이터센터 설치 용량과 동광 현물 재련 수수료 등의 지수를 활용해 원자재 가격 예측 서비스를 구현할 수 있다</li>                    <li>구리는 안정적 상승세를 보이지만, 금은 글로벌 태양광이나 SMP 지수 영향으로 급등락이 예상된다고 AI가 예측한다</li>                    <li>GPT 액션을 통해 ChatGPT, Gemini 등 다양한 LLM을 플랫폼에 통합하여 서비스를 확장할 수 있다</li>                    <li>멀티 모델을 활용하여 LLM에게 문서 요약을 시키고, 이를 통해 학습 데이터를 효율적으로 생성할 수 있다</li>                    <li>역할별 평가 에이전트를 구축하여 개발자는 기술 항목을, 인사 전문가는 경력을 중요시하는 등 맞춤형 분석이 가능하다</li>                </ul>            </div>
         </div>
@@ -722,7 +802,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 70</div>
-                <img src="slides/slide_070.png" class="slide-image" alt="슬라이드 70" loading="lazy">            </div>
+                <img src="slides/slide_070.jpg" class="slide-image" alt="슬라이드 70" loading="lazy" onclick="openLightbox('slides/slide_070.jpg', 70)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>제조 파운데이션 모델에 대한 관심이 높아지고 있다</li>                    <li>개별적이고 창의적인 아이디어로 접근할 때 한국인들의 강점이 발휘된다</li>                    <li>대규모 플랫폼 구축보다는 개인의 번뜩이는 아이디어가 더 효과적이다</li>                </ul>            </div>
         </div>
@@ -730,7 +810,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 71</div>
-                <img src="slides/slide_071.png" class="slide-image" alt="슬라이드 71" loading="lazy">            </div>
+                <img src="slides/slide_071.jpg" class="slide-image" alt="슬라이드 71" loading="lazy" onclick="openLightbox('slides/slide_071.jpg', 71)">            </div>
             <div class="slide-right">
                 <p class="no-points">(내용 없음)</p>            </div>
         </div>
@@ -738,7 +818,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 72</div>
-                <img src="slides/slide_072.png" class="slide-image" alt="슬라이드 72" loading="lazy">            </div>
+                <img src="slides/slide_072.jpg" class="slide-image" alt="슬라이드 72" loading="lazy" onclick="openLightbox('slides/slide_072.jpg', 72)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한국의 제조업은 현재 세계 최고 수준에 도달했다고 평가할 수 있다</li>                    <li>독일의 자동차 공급망이 중국에 밀려나고 러시아 가스 등 에너지 문제로 어려움을 겪고 있다</li>                    <li>일본 제조업의 성장 동력이 과거에 비해 떨어진 상태이다</li>                    <li>한국은 고집적도 제조업에서 높은 부가가치를 창출하는 완전한 공급망을 보유한 국가 중 하나이다</li>                    <li>인구 문제 등으로 공급망 붕괴 위험이 있지만 이는 모든 사회가 직면한 공통 문제이다</li>                </ul>            </div>
         </div>
@@ -746,7 +826,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 73</div>
-                <img src="slides/slide_073.png" class="slide-image" alt="슬라이드 73" loading="lazy">            </div>
+                <img src="slides/slide_073.jpg" class="slide-image" alt="슬라이드 73" loading="lazy" onclick="openLightbox('slides/slide_073.jpg', 73)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>숙련된 운전원의 노령화로 인한 암묵지 증발이 제조업에 가장 큰 위협 요소가 되고 있다</li>                    <li>일본의 인구구조 변화와 경제 에너지 저하로 한국 기업이 첨단 정밀 제조 분야에 진출할 기회가 생겼다</li>                    <li>산업 AI는 특정 문제 해결에 특화되어 운영 효율성과 생산성 향상을 통해 확실한 ROI를 창출해야 한다</li>                    <li>AI 도입 시 전면 자동화보다는 반자동화 가이던스로 시작해 사람을 도와주는 방식이 성공 확률이 높다</li>                    <li>팔란티어 도입 사례에서는 온톨로지 구축 시 룰 베이스 방식을 활용해 데이터 관계와 규칙을 정의하는 방식을 많이 사용한다</li>                </ul>            </div>
         </div>
@@ -754,7 +834,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 74</div>
-                <img src="slides/slide_074.png" class="slide-image" alt="슬라이드 74" loading="lazy">            </div>
+                <img src="slides/slide_074.jpg" class="slide-image" alt="슬라이드 74" loading="lazy" onclick="openLightbox('slides/slide_074.jpg', 74)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>팔란티어는 아마존보다 높은 클라우드 보안 능력을 제공하며 펜타곤 수준의 보안을 보장한다</li>                    <li>온톨로지 기술을 통해 피처의 의미와 생성 이력을 추적할 수 있다</li>                    <li>데이터 흐름을 블록체인처럼 트래킹하여 언제 어떻게 생성되고 변환되었는지 추적하는 기능을 제공한다</li>                    <li>머신러닝에서 학습이 잘 안 될 때 피처의 의미를 파악하는 것이 중요하다</li>                </ul>            </div>
         </div>
@@ -762,7 +842,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 75</div>
-                <img src="slides/slide_075.png" class="slide-image" alt="슬라이드 75" loading="lazy">            </div>
+                <img src="slides/slide_075.jpg" class="slide-image" alt="슬라이드 75" loading="lazy" onclick="openLightbox('slides/slide_075.jpg', 75)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>정밀 제조에서는 각 공정 단계(붙이기, 자르기 등)에서 미세한 오차가 발생할 수 있어 품질 관리가 중요함</li>                    <li>동일한 공정이라도 여러 장비를 사용하는데, 각 장비마다 진공도 등 파라미터가 달라 결과물에 차이가 발생함</li>                    <li>블록체인과 같은 방식으로 원료부터 최종 제품까지 모든 가공 과정과 사용된 장비 정보를 데이터로 추적 저장함</li>                    <li>불량품 발생 시 전체를 폐기하지 않고, 데이터 추적을 통해 특정 장비의 문제 구간만 파악하여 해당 부분만 처리할 수 있음</li>                    <li>정밀 제조의 압박을 받는 한국이 이런 데이터 추적 기술에서 미국이나 중국보다 상대적으로 우위에 있음</li>                </ul>            </div>
         </div>
@@ -770,7 +850,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 76</div>
-                <img src="slides/slide_076.png" class="slide-image" alt="슬라이드 76" loading="lazy">            </div>
+                <img src="slides/slide_076.jpg" class="slide-image" alt="슬라이드 76" loading="lazy" onclick="openLightbox('slides/slide_076.jpg', 76)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>정밀 제조업체들이 높은 수율(99.999%)을 달성하기 위해 팔란티어 같은 AI 툴을 활용하고 있다</li>                    <li>외산 솔루션의 라이센스 비용이 높아 국내 기업들의 부담이 되고 있다</li>                    <li>소프트웨어 디파인드 비클(Software Defined Vehicle) 트렌드로 현대차 등이 대규모 투자를 진행하고 있다</li>                    <li>제조업에서도 AI 기능이 탑재된 제어기가 기본적인 PLC 제어기보다 선호되고 있다</li>                    <li>지멘스, 미츠비시, 허니웰 등 제조장비 회사들이 AI 기반 소프트웨어 기능을 지속적으로 강화하고 있다</li>                </ul>            </div>
         </div>
@@ -778,7 +858,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 77</div>
-                <img src="slides/slide_077.png" class="slide-image" alt="슬라이드 77" loading="lazy">            </div>
+                <img src="slides/slide_077.jpg" class="slide-image" alt="슬라이드 77" loading="lazy" onclick="openLightbox('slides/slide_077.jpg', 77)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>아스펜텍과 아비바 같은 산업용 소프트웨어 회사들이 매출보다 훨씬 높은 가치(약 20조원)로 평가받아 슈나이더 일렉트릭 등 대기업에 M&A되고 있다</li>                    <li>아비바의 PI(Plant Information)는 제조업 데이터를 실시간으로 수집하고 히스토리로 저장하는 RTDB(Real-Time Database) 시스템이다</li>                    <li>소프트웨어 정의 제조(Software Defined Manufacturing)와 소프트웨어 정의 컨트롤러가 미래 제조업의 핵심 트렌드가 되고 있다</li>                    <li>팔란티어는 미국 정부의 전략적 지원을 받아 성장한 사례로, 미국은 금융과 소프트웨어 인프라 분야에서 국가적 역량을 집중하고 있다</li>                    <li>한국은 제조 역량은 높지만 산업용 소프트웨어 분야에서의 경쟁력 확보가 향후 과제이다</li>                </ul>            </div>
         </div>
@@ -786,7 +866,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 78</div>
-                <img src="slides/slide_078.png" class="slide-image" alt="슬라이드 78" loading="lazy">            </div>
+                <img src="slides/slide_078.jpg" class="slide-image" alt="슬라이드 78" loading="lazy" onclick="openLightbox('slides/slide_078.jpg', 78)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>제조업에서 AI 적용이 기존 컴퓨터 비전 기반 불량검출에서 시계열 데이터, 공급망 데이터, 수요예측 등으로 확장되고 있다</li>                    <li>반도체 제조에서는 벌크 원료를 초정밀 등급으로 정제할 때 100배 이상의 가격 차이가 발생한다</li>                    <li>한국은 반도체, 배터리 등 정밀 제조 인프라가 잘 갖춰진 곳으로 고급 제조업에 강점을 가지고 있다</li>                    <li>AI 상용화에서는 새로운 베타 버전보다 테스트를 통한 실제 적용 경험이 더 중요하다</li>                    <li>AI 학습 단계를 개념 이해(1단계), 기존 코드 실행(2단계), 코드 수정(3단계)로 구분하여 설명했다</li>                </ul>            </div>
         </div>
@@ -794,7 +874,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 79</div>
-                <img src="slides/slide_079.png" class="slide-image" alt="슬라이드 79" loading="lazy">            </div>
+                <img src="slides/slide_079.jpg" class="slide-image" alt="슬라이드 79" loading="lazy" onclick="openLightbox('slides/slide_079.jpg', 79)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>3-4번 단계에서는 실제 데이터(엑셀/CSV)를 가공하여 AI 모델을 개발하고 PoC를 수행했음</li>                    <li>5번 단계는 시험 운영으로 실험 환경에서 AI 모델의 성능을 검증하는 단계임</li>                    <li>6번 단계는 턴바이턴 내비게이션 방식으로 AI가 가이던스를 제공하고 사람이 판단하는 단기 운영임</li>                    <li>7번 단계는 단기 운영 결과가 좋아서 AI 시스템을 직접 연결하여 본격 운영하는 단계임</li>                    <li>AI 시스템 도입은 PoC → 시험 운영 → 가이던스 운영 → 직접 운영의 단계적 접근을 통해 진행됨</li>                </ul>            </div>
         </div>
@@ -802,7 +882,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 80</div>
-                <img src="slides/slide_080.png" class="slide-image" alt="슬라이드 80" loading="lazy">            </div>
+                <img src="slides/slide_080.jpg" class="slide-image" alt="슬라이드 80" loading="lazy" onclick="openLightbox('slides/slide_080.jpg', 80)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 서비스 8단계에서 AI가 대부분의 작업을 자동으로 수행하도록 할 때 보통 사고가 발생한다</li>                    <li>사고가 발생하는 이유는 사람들의 막연한 기대감과 롱테일 문제 때문이다</li>                    <li>사고를 방지하는 것이 핵심 기술이자 노하우이다</li>                    <li>9단계에서는 AI가 자신의 한계를 인식하고 '잘 못한다'고 미리 알려주는 기능이 중요하다</li>                    <li>10단계는 고급 사용자보다도 더 뛰어난 성능을 달성하는 단계이다</li>                </ul>            </div>
         </div>
@@ -810,7 +890,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 81</div>
-                <img src="slides/slide_081.png" class="slide-image" alt="슬라이드 81" loading="lazy">            </div>
+                <img src="slides/slide_081.jpg" class="slide-image" alt="슬라이드 81" loading="lazy" onclick="openLightbox('slides/slide_081.jpg', 81)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한중 비즈니스 포럼에서 대통령 다음 순서로 한국 제조업 성과를 발표했음</li>                    <li>한국이 반도체 HBM, LNG 운반선, CDMO 생산능력, 바이오로직스 등에서 세계 1등 경쟁력을 보유</li>                    <li>2차 전지 분야에서 테슬라가 한국 제품을 선택하며 중국 대비 품질 우수성을 입증</li>                    <li>포스코 15년 연속 세계 최고 품질 철강, LG 에너지솔루션 품질 우수성 등 한국 제조업의 글로벌 리더십</li>                    <li>LG 창원 스마트파크, 포스코 고로, LS일렉트릭 등이 등대공장으로 선정되어 스마트 제조 혁신을 주도</li>                </ul>            </div>
         </div>
@@ -818,7 +898,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 82</div>
-                <img src="slides/slide_082.png" class="slide-image" alt="슬라이드 82" loading="lazy">            </div>
+                <img src="slides/slide_082.jpg" class="slide-image" alt="슬라이드 82" loading="lazy" onclick="openLightbox('slides/slide_082.jpg', 82)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>철강 분야에서의 AI 성과를 바탕으로 석유화학 등 다른 산업 분야로 AI 적용을 확장하고 있음</li>                    <li>중국이 제조업 AI 전략에서 한국을 앞서가고 있으며, 한국이 500개 AI 공장 계획을 발표하면 중국은 3천 개로 대응하는 상황</li>                    <li>산업부 맥스 AI에서 데이터를 수집하여 제조 파운데이션 모델을 구축하고 업종별 특화 모델을 개발하려고 함</li>                    <li>제조 데이터를 품질(x축)과 양(y축)으로 분석한 결과, 고품질 대용량 데이터를 확보하는 것이 중요함을 확인</li>                    <li>젠슨 황이 언급한 바에 따르면, 한국은 소프트웨어 AI 기술과 제조업을 모두 잘하는 유니크한 나라임</li>                </ul>            </div>
         </div>
@@ -826,7 +906,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 83</div>
-                <img src="slides/slide_083.png" class="slide-image" alt="슬라이드 83" loading="lazy">            </div>
+                <img src="slides/slide_083.jpg" class="slide-image" alt="슬라이드 83" loading="lazy" onclick="openLightbox('slides/slide_083.jpg', 83)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>한국과 중국이 AI 역량, 데이터 역량, 소프트웨어 역량, 제조 역량을 모두 갖춘 세계적 수준의 국가들이다</li>                    <li>중국은 정밀 제조를 제외하고는 한국보다 더 우수한 제조, AI, 소프트웨어 역량을 보유하고 있다</li>                    <li>한국과 중국은 제조 AI 파운데이션 모델 개발에서 충돌, 협력, 경쟁 구도를 형성할 것이다</li>                    <li>제조 파운데이션 모델은 시계열 데이터, 이미지, 그래프, 텍스트를 통합적으로 이해할 수 있어야 한다</li>                    <li>개별 기업의 한계를 극복하기 위해 정부 차원에서 제조 데이터를 통합하여 공통 파운데이션 모델을 구축하려고 추진 중이다</li>                </ul>            </div>
         </div>
@@ -834,7 +914,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 84</div>
-                <img src="slides/slide_084.png" class="slide-image" alt="슬라이드 84" loading="lazy">            </div>
+                <img src="slides/slide_084.jpg" class="slide-image" alt="슬라이드 84" loading="lazy" onclick="openLightbox('slides/slide_084.jpg', 84)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>시멘트 소성로는 한 라인당 약 5천억원 규모의 대형 설비로, 예열실과 킬른에서 각각 1/3, 2/3의 에너지를 사용한다</li>                    <li>950도 예열 후 1600도에서 구워지는 시멘트 제조공정은 20-30년 경력의 숙련 운전자들이 운영하고 있다</li>                    <li>현장 운전자들은 AI 시스템에 운전권을 쉽게 넘겨주지 않으며, 이는 안전성과 정확성에 대한 우려 때문이다</li>                    <li>산업현장 AI 도입에는 안전성, 신뢰성, 정확성, 투명성이 핵심 요구사항이며 현장 시행착오가 중요하다</li>                    <li>이인지는 95% 자동 운전을 달성하며 예측, 최적화, 설명, 원단가 최적화 기능을 제공하고 있다</li>                </ul>            </div>
         </div>
@@ -842,7 +922,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 85</div>
-                <img src="slides/slide_085.png" class="slide-image" alt="슬라이드 85" loading="lazy">            </div>
+                <img src="slides/slide_085.jpg" class="slide-image" alt="슬라이드 85" loading="lazy" onclick="openLightbox('slides/slide_085.jpg', 85)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 시스템이 데이터 전처리, 인과관계 추출, 예측, 최적화, 설명 기능을 자동화하여 사람의 경험과 노하우를 대체</li>                    <li>스마트 고로, 유리 용해로, 철강 냉연 가열로 등 에너지 집약적 제조공정을 80-95% 수준으로 자동 운전 달성</li>                    <li>국가 전략 기술로 지정된 AI 분야 제1호 기업으로서 각 산업 필러의 1등 기업에서 레퍼런스를 구축하는 전략 추진</li>                    <li>일본과 한국의 유사한 제조업 구조를 활용하여 국내 성과를 바탕으로 일본 진출 및 디지털 전환 서비스 제공</li>                    <li>LLM 기술을 활용한 유사 사례 검색으로 위험 상황 시 과거 데이터 기반 설명 서비스를 기상청과 협력하여 개발</li>                </ul>            </div>
         </div>
@@ -850,7 +930,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 86</div>
-                <img src="slides/slide_086.png" class="slide-image" alt="슬라이드 86" loading="lazy">            </div>
+                <img src="slides/slide_086.jpg" class="slide-image" alt="슬라이드 86" loading="lazy" onclick="openLightbox('slides/slide_086.jpg', 86)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>국가전략기술 확보 기업 선정 시 초격차 기술 특례 상장이 가능하며, 인공지능 분야 첫 상장을 목표로 함</li>                    <li>한국에서 소프트웨어 글로벌 진출은 자본과 인력 측면에서 어려움이 있지만 제조업 데이터는 풍부함</li>                    <li>설명 가능한 AI에서 금 가격 예측 시 달러 인덱스와 같은 복합적 경제 요인들의 상호작용 설명 가능성에 대한 질문 제기</li>                </ul>            </div>
         </div>
@@ -858,7 +938,7 @@
         <div class="slide-section">
             <div class="slide-left">
                 <div class="slide-num">슬라이드 87</div>
-                <img src="slides/slide_087.png" class="slide-image" alt="슬라이드 87" loading="lazy">            </div>
+                <img src="slides/slide_087.jpg" class="slide-image" alt="슬라이드 87" loading="lazy" onclick="openLightbox('slides/slide_087.jpg', 87)">            </div>
             <div class="slide-right">
                 <ul class="key-points">                    <li>AI 모델이 선행 수행 지표의 변곡점과 사율 차이를 측정하여 시장 정보를 분석한다</li>                    <li>SMP 선행지수와 같은 지표들의 시간차이와 트렌드 변화를 AI가 추적한다</li>                    <li>AI 모델은 리니어가 아닌 논리니어(non-linear) 방식으로 변화를 학습한다</li>                    <li>각 설명변수의 영향도가 시간에 따라 동적으로 변화한다 (예: SMP 영향도 50%→35%)</li>                    <li>설명변수들 간의 독립성 가정에 대한 기술적 토론이 진행되었다</li>                </ul>            </div>
         </div>
@@ -869,8 +949,47 @@
                 <li>AI 발전은 퍼셉션 AI → 제너러티브 AI → 에이전트 AI → 피지컬 AI 순으로 진행되며, 현재는 에이전트 AI 시대로 접어들면서 도메인 전문성을 가진 1인 창업 기회가 확대되고 있다.</li>                <li>AI 프로젝트의 현장 적용 성공률은 5%에 불과한데, 이는 기술적 한계보다는 사람의 복잡한 의사결정 영역과 암묵지를 완전 자동화하기 어렵기 때문이며, 반자동화 가이던스 방식으로 시작하는 것이 성공 확률을 높인다.</li>                <li>설명 가능한 AI는 성능보다 사용성과 법적 규제 대응 측면에서 중요하며, EU AI법과 국내 개인정보보호법 등에서 AI 의사결정에 대한 설명 의무가 강화되고 있어 필수 기술로 자리잡고 있다.</li>                <li>한국은 정밀 제조업에서 세계 최고 수준의 역량을 보유하고 있으며, AI 기술과 제조업을 모두 잘하는 유니크한 국가로서 제조 AI 파운데이션 모델 개발에서 중국과 경쟁우위를 확보할 수 있는 기회를 가지고 있다.</li>            </ul>
         </div>
 
+    <script>
+        var slideImages = [];
+        var currentIdx = 0;
+        document.querySelectorAll('.slide-image').forEach(function(img) {
+            slideImages.push({ src: img.getAttribute('src'), alt: img.getAttribute('alt') });
+        });
+
+        function openLightbox(src, slideNum) {
+            currentIdx = slideImages.findIndex(function(s) { return s.src === src; });
+            if (currentIdx < 0) currentIdx = 0;
+            showSlide();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        function navLightbox(e, dir) {
+            e.stopPropagation();
+            currentIdx = (currentIdx + dir + slideImages.length) % slideImages.length;
+            showSlide();
+        }
+        function showSlide() {
+            var s = slideImages[currentIdx];
+            document.getElementById('lightbox-img').src = s.src;
+            document.getElementById('lightbox-caption').textContent = s.alt + ' (' + (currentIdx + 1) + '/' + slideImages.length + ')';
+        }
+        document.addEventListener('keydown', function(e) {
+            var lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('active')) return;
+            if (e.key === 'Escape') { lb.classList.remove('active'); document.body.style.overflow = ''; }
+            if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + slideImages.length) % slideImages.length; showSlide(); }
+            if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % slideImages.length; showSlide(); }
+        });
+    </script>
+
         <footer>
-            생성일시: 2026-02-16 02:29:15 | 자동 생성된 강의노트
+            생성일시: 2026-02-16 09:14:20 | 자동 생성된 강의노트
         </footer>
     </div>
 </body>
