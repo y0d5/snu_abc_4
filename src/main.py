@@ -15,6 +15,7 @@ from stt_parser import merge_stt_files, save_parsed_stt, STTDocument
 from matcher import run_matching
 from summarizer import run_summarization
 from generator import generate_markdown
+from deploy import deploy_to_site
 
 
 @dataclass
@@ -307,6 +308,17 @@ def process_lecture(lecture: LectureFolder) -> Path | None:
     
     # Step 5: 마크다운 결과물 생성
     md_path = generate_markdown(output_dir)
+    
+    # Step 6: docs/ 배포 폴더 자동 생성
+    print("\n" + "=" * 70)
+    print("🔄 Step 6: 배포 폴더 자동 생성")
+    print("=" * 70)
+    try:
+        deploy_to_site()
+        print("   💡 Netlify에 업로드하려면 docs/ 폴더를 드래그앤드롭하세요.")
+    except Exception as e:
+        print(f"   ⚠️ 배포 폴더 생성 실패: {e}")
+        print("   → 수동으로 배포를 실행해주세요.")
     
     return output_dir
 

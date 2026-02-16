@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """
-슬라이드-STT 매칭 모듈 (하이브리드 방식)
+슬라이드-STT 매칭 모듈
 
-1차: 시간 기반 균등 분할
-2차: LLM 검증 및 조정
-3차: 불확실한 부분 재매칭
+[v2] 슬라이딩 윈도우 방식:
+  - STT를 10분 단위 청크로 분할
+  - 각 청크를 슬라이드 윈도우(~15장)와 LLM으로 매칭
+  - 이전 청크 결과를 기반으로 윈도우를 이동
+
+[v1] 레거시 방식 (기존 데이터 호환):
+  - 시간 기반 균등 분할 + LLM 검증
 """
 
 import sys
-# 출력 버퍼링 비활성화
 sys.stdout.reconfigure(line_buffering=True)
 
 import os
+import re
 import json
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -288,12 +292,348 @@ def refine_uncertain_matches(matches: list[SlideMatch]) -> list[SlideMatch]:
     return matches
 
 
+###############################################################################
+# v2: 슬라이딩 윈도우 매칭 (새 방식)
+###############################################################################
+
+DEFAULT_LECTURE_MINUTES = 150   # 기본 강의 시간 (분)
+CHUNK_MINUTES = 10             # 청크 단위 (분)
+WINDOW_MULTIPLIER = 3          # 윈도우 크기 = 청크당 평균 슬라이드 × 이 배수
+OVERLAP_BACK = 2               # 윈도우 시작 시 뒤로 겹치는 슬라이드 수
+
+
+def sliding_window_matching(
+    slides_info: list[dict],
+    stt_data: dict,
+    total_duration_seconds: int
+) -> list[SlideMatch]:
+    """
+    슬라이딩 윈도우 방식의 슬라이드-STT 매칭
+
+    1) 강의 시간 결정 (기본 150분, STT와 20% 이상 차이시 STT 기준)
+    2) 슬라이드당 평균 시간 계산
+    3) STT를 10분 청크로 분할
+    4) 각 청크를 슬라이드 윈도우와 LLM으로 매칭
+    5) 윈도우를 이동하며 반복
+    """
+    print("\n[3-1] 슬라이딩 윈도우 매칭 시작")
+
+    num_slides = len(slides_info)
+    utterances = stt_data.get("utterances", [])
+
+    if not utterances or not num_slides:
+        print("   ⚠️ 슬라이드 또는 발화 데이터가 없습니다.")
+        return []
+
+    # --- 강의 시간 결정 ---
+    default_seconds = DEFAULT_LECTURE_MINUTES * 60
+    stt_last_second = max(u["seconds"] for u in utterances)
+
+    if total_duration_seconds > 0 and abs(total_duration_seconds - default_seconds) / default_seconds < 0.2:
+        lecture_seconds = default_seconds
+    elif total_duration_seconds > 0:
+        lecture_seconds = total_duration_seconds
+    else:
+        lecture_seconds = stt_last_second if stt_last_second > 0 else default_seconds
+
+    if stt_last_second > lecture_seconds:
+        lecture_seconds = stt_last_second
+
+    lecture_minutes = lecture_seconds / 60
+    avg_sec_per_slide = lecture_seconds / num_slides
+    avg_min_per_slide = avg_sec_per_slide / 60
+
+    print(f"   📊 강의 시간: {lecture_minutes:.0f}분")
+    print(f"   📊 슬라이드: {num_slides}장")
+    print(f"   📊 슬라이드당 평균: {avg_min_per_slide:.1f}분")
+    print(f"   📊 총 발화: {len(utterances)}개")
+
+    # --- 청크 분할 ---
+    chunk_seconds = CHUNK_MINUTES * 60
+    slides_per_chunk = int(CHUNK_MINUTES / avg_min_per_slide) if avg_min_per_slide > 0 else 5
+    window_size = max(slides_per_chunk * WINDOW_MULTIPLIER, 10)
+
+    chunks = split_utterances_into_chunks(utterances, chunk_seconds)
+    print(f"   📊 {CHUNK_MINUTES}분 청크: {len(chunks)}개, 윈도우 크기: {window_size}장")
+
+    # --- 슬라이드 매칭 결과 초기화 ---
+    matches = []
+    for slide in slides_info:
+        matches.append(SlideMatch(
+            slide_num=slide["page_num"],
+            slide_text=slide.get("text_preview", ""),
+            utterances=[],
+            confidence="unknown"
+        ))
+
+    # --- API 클라이언트 ---
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        print("   ⚠️ ANTHROPIC_API_KEY 없음 → 시간 기반 폴백")
+        return _fallback_time_based(matches, utterances, num_slides, stt_last_second)
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    # --- 청크별 슬라이딩 윈도우 매칭 ---
+    window_start = 0  # 0-based slide index
+
+    for chunk_idx, chunk in enumerate(chunks):
+        chunk_start_min = chunk["start_sec"] / 60
+        chunk_end_min = chunk["end_sec"] / 60
+        chunk_utterances = chunk["utterances"]
+
+        if not chunk_utterances:
+            continue
+
+        # 윈도우 범위: 뒤로 OVERLAP_BACK만큼 여유, 앞으로 window_size
+        win_start = max(0, window_start - OVERLAP_BACK)
+        win_end = min(num_slides, window_start + window_size)
+
+        # 마지막 청크라면 남은 슬라이드 전부 포함
+        if chunk_idx == len(chunks) - 1:
+            win_end = num_slides
+
+        window_slides = slides_info[win_start:win_end]
+
+        print(f"\n   🔄 청크 {chunk_idx + 1}/{len(chunks)} "
+              f"({chunk_start_min:.0f}~{chunk_end_min:.0f}분) "
+              f"→ 슬라이드 {win_start + 1}~{win_end}번")
+
+        # LLM으로 청크 매칭
+        try:
+            chunk_result = llm_match_chunk(
+                client, chunk_utterances, window_slides,
+                win_start, chunk_start_min, chunk_end_min
+            )
+        except Exception as e:
+            print(f"      ⚠️ LLM 매칭 실패: {e} → 균등 분할 폴백")
+            chunk_result = _fallback_chunk(chunk_utterances, win_start, win_end)
+
+        # 결과 반영
+        last_matched_idx = win_start
+        for mapping in chunk_result:
+            slide_idx = mapping["slide_idx"]
+            mapped_utterances = mapping["utterances"]
+
+            if 0 <= slide_idx < num_slides:
+                matches[slide_idx].utterances.extend(mapped_utterances)
+                matches[slide_idx].confidence = mapping.get("confidence", "medium")
+                matches[slide_idx].llm_verified = True
+                if slide_idx > last_matched_idx:
+                    last_matched_idx = slide_idx
+
+        # 다음 윈도우 시작점
+        window_start = last_matched_idx + 1
+        if window_start >= num_slides:
+            window_start = num_slides - 1
+
+        print(f"      → 매칭 완료, 다음 윈도우 시작: 슬라이드 {window_start + 1}번")
+
+    # 통계
+    filled = sum(1 for m in matches if m.utterances)
+    print(f"\n   ✅ 슬라이딩 윈도우 매칭 완료: {filled}/{num_slides} 슬라이드에 발화 배정")
+
+    return matches
+
+
+def split_utterances_into_chunks(
+    utterances: list[dict],
+    chunk_seconds: int
+) -> list[dict]:
+    """발화를 시간 기준으로 청크로 분할"""
+    if not utterances:
+        return []
+
+    chunks = []
+    current_chunk = {"start_sec": 0, "end_sec": chunk_seconds, "utterances": []}
+
+    for u in utterances:
+        sec = u.get("seconds", 0)
+        while sec >= current_chunk["end_sec"]:
+            chunks.append(current_chunk)
+            new_start = current_chunk["end_sec"]
+            current_chunk = {
+                "start_sec": new_start,
+                "end_sec": new_start + chunk_seconds,
+                "utterances": []
+            }
+        current_chunk["utterances"].append(u)
+
+    if current_chunk["utterances"]:
+        chunks.append(current_chunk)
+
+    return chunks
+
+
+def llm_match_chunk(
+    client: anthropic.Anthropic,
+    chunk_utterances: list[dict],
+    window_slides: list[dict],
+    window_offset: int,
+    chunk_start_min: float,
+    chunk_end_min: float
+) -> list[dict]:
+    """
+    LLM을 사용하여 10분 청크의 발화를 슬라이드 윈도우에 매칭
+
+    Returns:
+        list of {"slide_idx": int (0-based global), "utterances": [...], "confidence": str}
+    """
+
+    # 발화 내용 구성 (페이지 번호 힌트 포함)
+    utterance_lines = []
+    page_hints = []
+    for i, u in enumerate(chunk_utterances):
+        ts = u.get("timestamp", "")
+        speaker = u.get("speaker", "")
+        content = u.get("content", "")[:300]
+        utterance_lines.append(f"[{ts}] {speaker}: {content}")
+        if u.get("slide_num"):
+            page_hints.append(f"  - [{ts}] 발화가 STT에서 슬라이드 {u['slide_num']}번으로 표시됨")
+        if len(utterance_lines) >= 30:
+            utterance_lines.append(f"... (외 {len(chunk_utterances) - 30}개 발화)")
+            break
+
+    utterance_text = "\n".join(utterance_lines)
+    page_hint_text = ""
+    if page_hints:
+        page_hint_text = "\n## STT 페이지 번호 힌트 (우선 고려):\n" + "\n".join(page_hints) + "\n"
+
+    # 슬라이드 윈도우 구성
+    slide_lines = []
+    for s in window_slides:
+        pnum = s["page_num"]
+        text = s.get("text_preview", "")[:300]
+        slide_lines.append(f"### 슬라이드 {pnum}번\n{text if text else '(텍스트 없음)'}")
+
+    slides_text = "\n\n".join(slide_lines)
+
+    first_slide = window_slides[0]["page_num"]
+    last_slide = window_slides[-1]["page_num"]
+
+    prompt = f"""당신은 강의 슬라이드와 강연 녹취록(STT)을 매칭하는 전문가입니다.
+
+아래는 강의의 **{chunk_start_min:.0f}분 ~ {chunk_end_min:.0f}분** 구간 발화 내용입니다.
+이 발화들이 슬라이드 {first_slide}번 ~ {last_slide}번 중 어디에 해당하는지 매칭해주세요.
+{page_hint_text}
+## 발화 내용 ({chunk_start_min:.0f}~{chunk_end_min:.0f}분):
+{utterance_text}
+
+## 슬라이드 윈도우 ({first_slide}~{last_slide}번):
+{slides_text}
+
+## 매칭 규칙:
+1. 발화 내용과 슬라이드 텍스트의 주제/키워드를 비교하여 매칭
+2. STT에 페이지 번호가 표시된 경우 해당 정보를 우선 신뢰
+3. 강의는 순서대로 진행되므로, 슬라이드 번호는 대체로 오름차순
+4. 하나의 발화는 하나의 슬라이드에만 배정
+5. 이 시간대에 해당하지 않는 슬라이드는 빈 배열로
+
+JSON 배열로 답변해주세요. 이 시간대에서 실제로 다룬 슬라이드만 포함:
+[
+  {{
+    "slide_num": 슬라이드 번호,
+    "utterance_indices": [이 슬라이드에 해당하는 발화의 인덱스 (0부터 시작)],
+    "confidence": "high" | "medium" | "low"
+  }},
+  ...
+]"""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    response_text = response.content[0].text
+
+    # JSON 배열 파싱
+    try:
+        json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+        if json_match:
+            result_list = json.loads(json_match.group())
+        else:
+            print("      ⚠️ JSON 배열 파싱 실패")
+            return _fallback_chunk(chunk_utterances, window_offset, window_offset + len(window_slides))
+    except json.JSONDecodeError as e:
+        print(f"      ⚠️ JSON 파싱 오류: {e}")
+        return _fallback_chunk(chunk_utterances, window_offset, window_offset + len(window_slides))
+
+    # 결과 변환
+    mapped = []
+    for item in result_list:
+        slide_num = item.get("slide_num", 0)
+        indices = item.get("utterance_indices", [])
+        confidence = item.get("confidence", "medium")
+
+        slide_idx = slide_num - 1  # 1-based → 0-based
+        selected_utterances = []
+        for idx in indices:
+            if 0 <= idx < len(chunk_utterances):
+                selected_utterances.append(chunk_utterances[idx])
+
+        if selected_utterances:
+            mapped.append({
+                "slide_idx": slide_idx,
+                "utterances": selected_utterances,
+                "confidence": confidence
+            })
+
+    return mapped
+
+
+def _fallback_time_based(
+    matches: list[SlideMatch],
+    utterances: list[dict],
+    num_slides: int,
+    stt_last_second: float
+) -> list[SlideMatch]:
+    """API 키 없을 때 시간 기반 균등 분할 폴백"""
+    time_per_slide = stt_last_second / num_slides if num_slides else 1
+    for u in utterances:
+        sec = u.get("seconds", 0)
+        idx = min(int(sec / time_per_slide), num_slides - 1)
+        matches[idx].utterances.append(u)
+    return matches
+
+
+def _fallback_chunk(
+    chunk_utterances: list[dict],
+    win_start: int,
+    win_end: int
+) -> list[dict]:
+    """LLM 실패 시 청크 내 발화를 윈도우에 균등 분할"""
+    window_size = win_end - win_start
+    if window_size <= 0:
+        return []
+
+    result = []
+    per_slide = max(1, len(chunk_utterances) // window_size)
+
+    for i in range(window_size):
+        start = i * per_slide
+        end = start + per_slide if i < window_size - 1 else len(chunk_utterances)
+        selected = chunk_utterances[start:end]
+        if selected:
+            result.append({
+                "slide_idx": win_start + i,
+                "utterances": selected,
+                "confidence": "low"
+            })
+
+    return result
+
+
+###############################################################################
+# 메인 실행
+###############################################################################
+
 def run_matching(output_dir: Path) -> list[SlideMatch]:
     """
-    전체 매칭 프로세스 실행
+    전체 매칭 프로세스 실행 (v2: 슬라이딩 윈도우)
     """
     print("\n" + "=" * 70)
-    print("🔄 Step 3: 슬라이드-STT 매칭 시작")
+    print("🔄 Step 3: 슬라이드-STT 매칭 시작 (슬라이딩 윈도우)")
     print("=" * 70)
     
     # 데이터 로드
@@ -312,19 +652,12 @@ def run_matching(output_dir: Path) -> list[SlideMatch]:
     
     # STT duration 파싱 (예: "94분 3초")
     duration_str = metadata.get("stt_duration", "0분")
-    import re
     mins = re.search(r'(\d+)분', duration_str)
     secs = re.search(r'(\d+)초', duration_str)
     total_seconds = (int(mins.group(1)) * 60 if mins else 0) + (int(secs.group(1)) if secs else 0)
     
-    # 1차: 시간 기반 매칭
-    matches = time_based_matching(slides_info, stt_data, total_seconds)
-    
-    # 2차: LLM 검증
-    matches = llm_verify_matches(matches)
-    
-    # 3차: 불확실한 매칭 재조정
-    matches = refine_uncertain_matches(matches)
+    # 슬라이딩 윈도우 매칭 (v2)
+    matches = sliding_window_matching(slides_info, stt_data, total_seconds)
     
     # 결과 저장
     result_path = output_dir / "slide_matches.json"
@@ -349,10 +682,12 @@ def run_matching(output_dir: Path) -> list[SlideMatch]:
     high_conf = sum(1 for m in matches if m.confidence == "high")
     medium_conf = sum(1 for m in matches if m.confidence == "medium")
     low_conf = sum(1 for m in matches if m.confidence == "low")
+    filled = sum(1 for m in matches if m.utterances)
     
     print("\n" + "-" * 70)
     print("📊 매칭 결과 요약")
     print("-" * 70)
+    print(f"   발화 배정 슬라이드:     {filled}/{len(matches)}개")
     print(f"   높은 신뢰도 (high):   {high_conf}개")
     print(f"   중간 신뢰도 (medium): {medium_conf}개")
     print(f"   낮은 신뢰도 (low):    {low_conf}개")

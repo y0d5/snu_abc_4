@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticAI, PhysicalAI - 강의노트</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f0f0f0;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header {
+            background: #f0f0f0;
+            color: #333;
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #003366;
+        }
+        header h1 { font-size: 1.5em; margin-bottom: 8px; color: #003366; font-weight: 600; }
+        header .meta { color: #666; font-size: 0.9em; }
+        
+        /* 슬라이드 섹션: 왼쪽 이미지 + 오른쪽 포인트 */
+        .slide-section {
+            background: white;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+        }
+        .slide-left {
+            flex: 0 0 320px;
+            background: #f8f9fa;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid #eee;
+        }
+        .slide-num {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .slide-image {
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .slide-right {
+            flex: 1;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .key-points {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .key-points li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #f8f9fa;
+            border-left: 3px solid #003366;
+            border-radius: 4px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .key-points li:last-child {
+            margin-bottom: 0;
+        }
+        .no-points {
+            color: #999;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        /* Q&A 섹션 */
+        .qa-section, .takeaways-section {
+            background: white;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .qa-section h2, .takeaways-section h2 {
+            color: #003366;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+            font-size: 1.3em;
+        }
+        .qa-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .qa-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .qa-item .question {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .qa-item .answer {
+            padding-left: 16px;
+            color: #555;
+            border-left: 3px solid #003366;
+        }
+        
+        /* Key Takeaways */
+        .takeaways-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .takeaways-section li {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 6px;
+            border-left: 3px solid #003366;
+        }
+        .takeaways-section li:last-child {
+            margin-bottom: 0;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 16px;
+            color: #999;
+            font-size: 0.85em;
+        }
+        
+        /* 슬라이드 클릭 확대 (라이트박스) */
+        .slide-image {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .slide-image:hover {
+            opacity: 0.85;
+        }
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .lightbox-overlay.active {
+            display: flex;
+        }
+        .lightbox-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            line-height: 1;
+        }
+        .lightbox-close:hover {
+            color: #ccc;
+        }
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10000;
+            user-select: none;
+            padding: 10px;
+            line-height: 1;
+        }
+        .lightbox-nav:hover {
+            color: #ccc;
+        }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        .lightbox-caption {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.95em;
+            z-index: 10000;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+        
+        /* 반응형: 작은 화면에서는 세로 배치 */
+        @media (max-width: 768px) {
+            .slide-section {
+                flex-direction: column;
+            }
+            .slide-left {
+                flex: none;
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 라이트박스 오버레이 -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="navLightbox(event, -1)">&#8249;</span>
+        <img id="lightbox-img" src="" alt="">
+        <span class="lightbox-nav lightbox-next" onclick="navLightbox(event, 1)">&#8250;</span>
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+    <div class="container">
+        <header>
+            <h1>AgenticAI, PhysicalAI</h1>
+            <div class="meta">
+                강연자: 김태섭 | 날짜: 2026년 1월 9일
+            </div>
+        </header>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 1</div>
+                <img src="slides/slide_001.jpg" class="slide-image" alt="슬라이드 1" loading="lazy" onclick="openLightbox('slides/slide_001.jpg', 1)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 2</div>
+                <img src="slides/slide_002.jpg" class="slide-image" alt="슬라이드 2" loading="lazy" onclick="openLightbox('slides/slide_002.jpg', 2)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 3</div>
+                <img src="slides/slide_003.jpg" class="slide-image" alt="슬라이드 3" loading="lazy" onclick="openLightbox('slides/slide_003.jpg', 3)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 4</div>
+                <img src="slides/slide_004.jpg" class="slide-image" alt="슬라이드 4" loading="lazy" onclick="openLightbox('slides/slide_004.jpg', 4)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 5</div>
+                <img src="slides/slide_005.jpg" class="slide-image" alt="슬라이드 5" loading="lazy" onclick="openLightbox('slides/slide_005.jpg', 5)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>인간과 기계 간의 패턴 인식 능력을 비교하는 예제를 제시</li>                    <li>Elon Musk에서 'nk', Bill Gates에서 'ls'를 추출하는 규칙성을 보여줌</li>                    <li>Barack Obama에 대해서는 답을 묻는 형태로 청중의 추론 능력을 테스트</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 6</div>
+                <img src="slides/slide_006.jpg" class="slide-image" alt="슬라이드 6" loading="lazy" onclick="openLightbox('slides/slide_006.jpg', 6)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>인간은 소량의 예시만으로도 패턴을 찾아낼 수 있는 능력을 가지고 있다</li>                    <li>일론 머스크→nk, 빌 게이츠→ls 같은 예시를 통해 퀴즈 형태로 패턴 학습을 설명한다</li>                    <li>인간은 발견한 패턴을 새로운 상황(버락 오바마)에 적용할 수 있다</li>                    <li>이는 인간의 퓨샷 러닝(few-shot learning) 능력을 보여주는 사례이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 7</div>
+                <img src="slides/slide_007.jpg" class="slide-image" alt="슬라이드 7" loading="lazy" onclick="openLightbox('slides/slide_007.jpg', 7)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>인간은 소량의 예시만으로도 패턴을 찾을 수 있는 능력을 가지고 있다</li>                    <li>First name의 마지막 글자와 Last name의 마지막 글자를 연결하는 규칙을 예시로 제시했다</li>                    <li>Elon Musk → nk, Bill Gates → ls와 같은 패턴 예시를 통해 규칙을 설명했다</li>                    <li>사람은 이런 패턴을 찾아 Barack Obama와 같은 새로운 데이터에 적용할 수 있다</li>                    <li>few-shot learning의 개념을 퀴즈 형태로 설명하여 인간의 패턴 인식 능력을 보여줬다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 8</div>
+                <img src="slides/slide_008.jpg" class="slide-image" alt="슬라이드 8" loading="lazy" onclick="openLightbox('slides/slide_008.jpg', 8)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>사람은 문제를 보고 각 이름의 마지막 글자를 연결하는 사고 과정을 통해 답을 도출할 수 있다</li>                    <li>사람의 사고 과정은 언어로 표현되는 단계적 추론 능력이다</li>                    <li>거대언어모델(LLM)은 사람과 유사한 사고 과정을 수행할 수 있다</li>                    <li>LLM은 언어로 표현된 사고 과정을 통해 추론을 진행한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 9</div>
+                <img src="slides/slide_009.jpg" class="slide-image" alt="슬라이드 9" loading="lazy" onclick="openLightbox('slides/slide_009.jpg', 9)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM에서의 리즈닝(Reasoning) 방법론을 설명하기 위해 프롬프트 엔지니어링 개념을 먼저 소개</li>                    <li>프롬프트는 GPT나 제미나이 같은 LLM 애플리케이션에 입력하는 모든 텍스트를 의미</li>                    <li>프롬프트 엔지니어링은 LLM에게 효과적으로 글을 작성하는 방법을 연구하는 학문 분야</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 10</div>
+                <img src="slides/slide_010.jpg" class="slide-image" alt="슬라이드 10" loading="lazy" onclick="openLightbox('slides/slide_010.jpg', 10)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>프롬프트 엔지니어링은 AI에게 어떻게 질문하느냐를 설계하는 과정이다</li>                    <li>프롬프트 엔지니어링은 AI에게 어떻게 말해야 원하는 답을 얻을 수 있는지를 설계하는 기술이다</li>                    <li>프롬프트 엔지니어링은 GPT와의 대화 기술로 볼 수 있다</li>                    <li>프롬프트는 결국 텍스트 형태로 이루어진다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 11</div>
+                <img src="slides/slide_011.jpg" class="slide-image" alt="슬라이드 11" loading="lazy" onclick="openLightbox('slides/slide_011.jpg', 11)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>GPT는 동일한 질문이라도 프롬프트를 어떻게 작성하느냐에 따라 답변 품질이 달라진다</li>                    <li>친절하고 정중한 톤으로 질문하면 GPT가 더 나은 답변을 제공하는 경향이 있다</li>                    <li>무례하거나 부적절한 톤으로 질문하면 GPT의 답변 품질이 저하될 수 있다</li>                    <li>LLM은 사람과 유사한 특성을 보이며, 프롬프트 엔지니어링은 효과적인 설명 방법을 연구하는 기술이다</li>                    <li>LLM은 문제 해결 시 사람과 비슷한 수준의 성능을 보인다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 12</div>
+                <img src="slides/slide_012.jpg" class="slide-image" alt="슬라이드 12" loading="lazy" onclick="openLightbox('slides/slide_012.jpg', 12)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 13</div>
+                <img src="slides/slide_013.jpg" class="slide-image" alt="슬라이드 13" loading="lazy" onclick="openLightbox('slides/slide_013.jpg', 13)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 14</div>
+                <img src="slides/slide_014.jpg" class="slide-image" alt="슬라이드 14" loading="lazy" onclick="openLightbox('slides/slide_014.jpg', 14)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 15</div>
+                <img src="slides/slide_015.jpg" class="slide-image" alt="슬라이드 15" loading="lazy" onclick="openLightbox('slides/slide_015.jpg', 15)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>In-context Learning은 LLM이 주어진 예시나 설명을 보고 즉석에서 학습하는 능력을 의미한다</li>                    <li>모델의 크기가 커질수록 예시를 더 적극적으로 이해하고 활용할 수 있는 능력이 향상된다</li>                    <li>작은 모델에서는 예시 개수에 따른 성능 차이가 적지만, 큰 모델일수록 예시 활용 능력이 뛰어나다</li>                    <li>In-context Learning은 주어진 컨텍스트만으로 바로 학습하여 일반화할 수 있는 능력이다</li>                    <li>모델이 클수록 프롬프트를 이해하는 능력과 사고할 수 있는 능력이 향상된다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 16</div>
+                <img src="slides/slide_016.jpg" class="slide-image" alt="슬라이드 16" loading="lazy" onclick="openLightbox('slides/slide_016.jpg', 16)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Zero-shot, One-shot, Few-shot은 LLM에게 제공하는 예시의 개수에 따른 분류로, 예시가 많을수록 정답률이 향상된다</li>                    <li>In-context learning은 주어진 컨텍스트(프롬프트)만 보고 그 자리에서 바로 학습하는 능력을 의미한다</li>                    <li>모델 크기가 클수록 in-context learning 성능이 증가하며, 예시를 더 적극적으로 이해하고 활용할 수 있다</li>                    <li>큰 LLM일수록 프롬프트를 이해하는 능력이 향상되어 사고할 수 있는 능력을 갖게 된다</li>                    <li>사람처럼 소량의 데이터만으로도 일반화하여 활용할 수 있는 능력이 대형 언어모델의 특징이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 17</div>
+                <img src="slides/slide_017.jpg" class="slide-image" alt="슬라이드 17" loading="lazy" onclick="openLightbox('slides/slide_017.jpg', 17)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>In-context learning은 예시나 설명을 제공하여 LLM이 상황을 이해하고 학습할 수 있게 하는 능력이다</li>                    <li>LLM은 학습 과정에서 인터넷의 다양한 데이터를 경험하며 이 능력을 획득한다</li>                    <li>학습 데이터에는 예시와 설명이 주어지고 이에 대한 답변이 제시되는 형태의 텍스트가 많이 포함되어 있다</li>                    <li>실제 텍스트에서 사람들이 인스트럭션과 예시를 함께 제공하여 설명하는 패턴이 데이터에 존재한다</li>                    <li>LLM은 이러한 패턴의 데이터를 통해 예시를 활용하고 설명을 이해하는 방식으로 학습된다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 18</div>
+                <img src="slides/slide_018.jpg" class="slide-image" alt="슬라이드 18" loading="lazy" onclick="openLightbox('slides/slide_018.jpg', 18)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM에게 단순한 예시만 제공하는 것보다 사람의 사고 과정까지 함께 설명해주면 추론 성능이 향상된다</li>                    <li>문제 해결 과정에서 인간이 생각하는 풀이 과정을 프롬프트에 포함시키는 것이 효과적이다</li>                    <li>이러한 사고 과정을 포함한 프롬프트 기법을 'Chain of Thought(체인 오브 팟)'라고 한다</li>                    <li>예시만 던져주고 알아서 이해하라는 방식보다는 구체적인 추론 단계를 제시하는 것이 중요하다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 19</div>
+                <img src="slides/slide_019.jpg" class="slide-image" alt="슬라이드 19" loading="lazy" onclick="openLightbox('slides/slide_019.jpg', 19)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM에게 단순히 예시만 제공하는 것보다 사람의 사고 과정을 함께 설명해주면 성능이 향상된다</li>                    <li>문제 해결 과정에서 인간의 추론 단계를 프롬프트에 포함시키는 것이 효과적이다</li>                    <li>이러한 사고 과정을 포함한 프롬프트 기법을 'Chain of Thought'라고 한다</li>                    <li>예시와 함께 풀이 과정을 제시하면 LLM의 추론 능력이 크게 개선된다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 20</div>
+                <img src="slides/slide_020.jpg" class="slide-image" alt="슬라이드 20" loading="lazy" onclick="openLightbox('slides/slide_020.jpg', 20)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Chain-of-Thought Prompting은 질문할 때 사람의 사고 과정을 예시로 함께 제공하는 기법이다</li>                    <li>단순한 수학 문제도 사고 과정 없이 질문하면 GPT가 틀리는 경우가 발생한다</li>                    <li>예시와 함께 사고 과정을 텍스트로 제공하면 LLM이 그 과정을 모방하여 정답률이 향상된다</li>                    <li>현업에서 GPT에게 요구할 때 사고 과정이나 가정(assumption)을 함께 제공하면 더 나은 결과를 얻을 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 21</div>
+                <img src="slides/slide_021.jpg" class="slide-image" alt="슬라이드 21" loading="lazy" onclick="openLightbox('slides/slide_021.jpg', 21)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM이 Chain-of-Thought 프롬프팅에 반응하는 이유는 주어진 사고 과정을 이해하고 일반화하는 능력이 있기 때문이다</li>                    <li>단순한 지시보다는 구체적인 방법론과 예시를 함께 제공했을 때 LLM의 성능이 향상된다</li>                    <li>이는 사람과의 소통에서도 마찬가지로, 명확한 가이드라인과 샘플을 제공해야 원하는 결과를 얻을 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 22</div>
+                <img src="slides/slide_022.jpg" class="slide-image" alt="슬라이드 22" loading="lazy" onclick="openLightbox('slides/slide_022.jpg', 22)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM이 텍스트를 이해하고 일반화하는 능력으로 인해 Chain-of-Thought 프롬프팅이 효과적으로 작동한다</li>                    <li>GPT 사용 시 단순한 질문보다는 사람에게 설명하듯 자세하고 친근하게 프롬프팅하는 것이 중요하다</li>                    <li>구체적인 생각과 정보를 구구절절 제공하면 LLM이 이를 체계적으로 정리하고 보완해준다</li>                    <li>현재 GPT, Gemini 같은 애플리케이션은 사람의 사고 과정을 유사하게 따라가는 능력을 보여준다</li>                    <li>현재의 ChatGPT는 에이전틱 애플리케이션이 아닌 단순히 요청에 응답하고 끝나는 형태의 시스템이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 23</div>
+                <img src="slides/slide_023.jpg" class="slide-image" alt="슬라이드 23" loading="lazy" onclick="openLightbox('slides/slide_023.jpg', 23)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Non-agentic workflow는 질문에 대해 단순히 답변하고 종료하는 수동적 일회성 작업을 수행한다</li>                    <li>Non-agentic 시스템은 후속 조치를 스스로 수행하지 않는 특징을 가진다</li>                    <li>작년 초반까지는 프롬프트 엔지니어링이 핵심이었으며, GPT에게 좋은 질문을 하는 것이 중요했다</li>                    <li>최근에는 Non-agentic workflow에서 Agentic workflow로 발전하는 추세이다</li>                    <li>Agentic workflow는 하나의 작업이 아닌 반복적으로 목표를 달성하기 위해 스스로 후속 조치를 취하며 개선하는 시스템이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 24</div>
+                <img src="slides/slide_024.jpg" class="slide-image" alt="슬라이드 24" loading="lazy" onclick="openLightbox('slides/slide_024.jpg', 24)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Agentic AI는 단순한 질문-답변을 넘어서 GPT가 스스로 일을 수행하도록 하는 개념이다</li>                    <li>컨텍스트 엔지니어링은 AI가 일을 수행하기 위한 재료(논문, 책 등)를 함께 제공하는 방식이다</li>                    <li>컨텍스트는 단순한 텍스트가 아닌 작업 수행을 위한 추가적인 자료들을 포함한다</li>                    <li>기존 프롬프트 엔지니어링에 RAG(Retriever Augmented Generation) 시스템이 추가된다</li>                    <li>RAG는 검색 기능을 활용하여 생성 모델의 성능을 향상시키는 기술이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 25</div>
+                <img src="slides/slide_025.jpg" class="slide-image" alt="슬라이드 25" loading="lazy" onclick="openLightbox('slides/slide_025.jpg', 25)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>GPT는 현재 검색 기능과 연동되어 질문에 대한 답변을 제공하는 RAG 기술을 활용하고 있다</li>                    <li>Agentic AI는 단발성 작업이 아닌 반복적인 워크플로우 형태로 작업을 수행한다</li>                    <li>메모리와 히스토리 기능이 필요하여 과거 작업 기록을 저장하고 필요시 재활용할 수 있어야 한다</li>                    <li>삼성전자와 하이닉스 같은 메모리 반도체 기업들이 AI용 메모리 시장에 주목하고 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 26</div>
+                <img src="slides/slide_026.jpg" class="slide-image" alt="슬라이드 26" loading="lazy" onclick="openLightbox('slides/slide_026.jpg', 26)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Agentic AI는 장시간(하루~한달) 지속적으로 작업을 수행할 수 있는 능력을 가진다</li>                    <li>장기간 작업을 위해서는 과거 작업 이력을 저장할 메모리가 필요하다</li>                    <li>GPT 등 현재 AI는 HBM 메모리를 사용하며, Agentic AI에서는 메모리 중요성이 더욱 커진다</li>                    <li>삼성전자, 하이닉스 등이 Agentic AI용 메모리 구현 기술을 연구 중이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 27</div>
+                <img src="slides/slide_027.jpg" class="slide-image" alt="슬라이드 27" loading="lazy" onclick="openLightbox('slides/slide_027.jpg', 27)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 28</div>
+                <img src="slides/slide_028.jpg" class="slide-image" alt="슬라이드 28" loading="lazy" onclick="openLightbox('slides/slide_028.jpg', 28)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 29</div>
+                <img src="slides/slide_029.jpg" class="slide-image" alt="슬라이드 29" loading="lazy" onclick="openLightbox('slides/slide_029.jpg', 29)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 30</div>
+                <img src="slides/slide_030.jpg" class="slide-image" alt="슬라이드 30" loading="lazy" onclick="openLightbox('slides/slide_030.jpg', 30)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 31</div>
+                <img src="slides/slide_031.jpg" class="slide-image" alt="슬라이드 31" loading="lazy" onclick="openLightbox('slides/slide_031.jpg', 31)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 32</div>
+                <img src="slides/slide_032.jpg" class="slide-image" alt="슬라이드 32" loading="lazy" onclick="openLightbox('slides/slide_032.jpg', 32)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Agentic Workflow는 사용자가 프롬프트로 목표(Goal)를 정의하는 것부터 시작된다</li>                    <li>목표가 주어지면 AI는 추론(Reasoning)을 통해 작업 계획을 수립한다</li>                    <li>단발성 작업이 아닌 지속적인 행동을 위해 사전 계획 수립이 필수적이다</li>                    <li>계획 수립 후 실제 액션(Action)을 실행하는 단계로 진행된다</li>                    <li>액션 실행 후 그에 따른 결과물을 얻게 되는 순환 구조를 가진다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 33</div>
+                <img src="slides/slide_033.jpg" class="slide-image" alt="슬라이드 33" loading="lazy" onclick="openLightbox('slides/slide_033.jpg', 33)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 34</div>
+                <img src="slides/slide_034.jpg" class="slide-image" alt="슬라이드 34" loading="lazy" onclick="openLightbox('slides/slide_034.jpg', 34)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Agentic AI는 플래닝-액션-결과 후에도 자기점검을 통해 추가적으로 보완하는 능력을 가진다</li>                    <li>사고 능력을 통해 결과물을 보완하고 앞선 플래닝을 수정하는 반복적 작업이 Agentic AI의 핵심이다</li>                    <li>가상 환경에서 에이전트가 할 수 있는 행동 목록을 미리 정의해두고 LLM이 이 중에서 선택한다</li>                    <li>LLM이 제안한 플래닝을 실제 시스템에 맞춰 최적의 액션으로 매핑하는 과정이 필요하다</li>                    <li>단발성이 아닌 여러 번 반복적으로 질문하고 개선하는 방식으로 작동한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 35</div>
+                <img src="slides/slide_035.jpg" class="slide-image" alt="슬라이드 35" loading="lazy" onclick="openLightbox('slides/slide_035.jpg', 35)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Agentic AI는 가상 환경에서 다양한 작업을 수행하는 사람과 같은 로봇으로 이해할 수 있다</li>                    <li>에이전트는 주어진 작업(예: 로션 바르기)을 위해 LLM을 통한 플래닝 과정을 거친다</li>                    <li>플래닝은 프롬프트와 인컨텍스트 러닝 예시를 활용하여 단계적으로 수행된다</li>                    <li>LLM은 최종 목표를 달성하기 위한 구체적인 행동 단계들을 순차적으로 제안한다</li>                    <li>에이전트의 안전한 활동을 위해 수행 가능한 행동들을 미리 정의하여 제약을 두는 것이 중요하다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 36</div>
+                <img src="slides/slide_036.jpg" class="slide-image" alt="슬라이드 36" loading="lazy" onclick="openLightbox('slides/slide_036.jpg', 36)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>AI 플래닝은 소프트웨어 리스트에서 문제 해결을 위한 순서를 결정하는 과정이다</li>                    <li>플래닝을 요리 재료 선택에 비유하면, 냉장고의 정해진 재료 중에서 LLM이 추천하여 선택하는 방식이다</li>                    <li>플래닝은 복잡한 개념이 아니라 이러한 단순한 선택 과정으로 작동한다</li>                    <li>이미지 분석 사례에서 동물 묘사, 객체 개수 파악 등 복합적 질문 처리 방식을 설명했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 37</div>
+                <img src="slides/slide_037.jpg" class="slide-image" alt="슬라이드 37" loading="lazy" onclick="openLightbox('slides/slide_037.jpg', 37)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>플래닝 관점에서 소프트웨어 접근은 어떤 API를 사용할지 결정하는 것이다</li>                    <li>어떤 소프트웨어를 가져와서 작동시켜 결과를 얻는 순서를 정하는 것이 플래닝이다</li>                    <li>GPT가 소프트웨어를 활용하려면 반드시 API 사용법과 소프트웨어 사용법이 제공되어야 한다</li>                    <li>사용법과 함께 실제 사용 예시가 주어져야 GPT가 소프트웨어 호출 순서를 계획할 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 38</div>
+                <img src="slides/slide_038.jpg" class="slide-image" alt="슬라이드 38" loading="lazy" onclick="openLightbox('slides/slide_038.jpg', 38)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>프롬프트는 단순한 질문이 아니라 구체적인 플래닝 방법을 예시와 함께 설명하는 사용 설명서와 같은 역할을 한다</li>                    <li>GPT는 사람이 매뉴얼을 보고 일을 계획하는 것처럼, 프롬프트의 사용법과 예시를 통해 새로운 상황에 적용할 수 있는 능력을 가진다</li>                    <li>효과적인 프롬프트 작성은 구구절절한 설명과 명확한 예시를 포함해야 한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 39</div>
+                <img src="slides/slide_039.jpg" class="slide-image" alt="슬라이드 39" loading="lazy" onclick="openLightbox('slides/slide_039.jpg', 39)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>AI 에이전트의 플래닝과 액션은 여러 툴과 소프트웨어를 순서대로 사용하는 과정이다</li>                    <li>플래닝은 어떤 툴을 어떤 순서로 사용할지 결정하는 단계이다</li>                    <li>액션은 결정된 순서에 따라 실제로 소프트웨어나 툴을 실행하는 단계이다</li>                    <li>DB 검색 시 API를 활용한 순차적 접근 방식이 중요한 예시이다</li>                    <li>효과적인 사용법 학습을 통해 새로운 상황에 적용할 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 40</div>
+                <img src="slides/slide_040.jpg" class="slide-image" alt="슬라이드 40" loading="lazy" onclick="openLightbox('slides/slide_040.jpg', 40)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>LLM은 스스로 답변을 생성하고 자기 점검을 통해 보완할 수 있는 능력을 가지고 있다</li>                    <li>Self-feedback 과정은 결과에 대한 피드백을 자동으로 생성하는 메커니즘이다</li>                    <li>실제 예시로 파스타 만드는 방법을 질문하면 LLM이 레시피를 제안하고 스스로 피드백을 생성할 수 있다</li>                    <li>이러한 자기 점검 및 보완 기능은 2-3년 전 논문에서 제시된 개념이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 41</div>
+                <img src="slides/slide_041.jpg" class="slide-image" alt="슬라이드 41" loading="lazy" onclick="openLightbox('slides/slide_041.jpg', 41)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>GPT가 생성한 결과물에 대해 스스로 개선 방안을 질문하고 피드백을 생성하는 자기 개선 메커니즘</li>                    <li>피드백을 바탕으로 GPT가 결과물을 반복적으로 리파인하는 순환 구조</li>                    <li>자동화 파이프라인을 통해 GPT가 지속적으로 결과를 개선할 수 있는 시스템 구현 가능성</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 42</div>
+                <img src="slides/slide_042.jpg" class="slide-image" alt="슬라이드 42" loading="lazy" onclick="openLightbox('slides/slide_042.jpg', 42)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>에이전트 워크플로우는 AI를 사람처럼 생각하는 것이 직관적이며, 일을 시키기 위해서는 프롬프팅 기술이 중요하다</li>                    <li>에이전트 설계 시 예시와 자세한 설명, 참고 자료나 데이터를 함께 제공해야 한다</li>                    <li>에이전트 AI는 적용 분야에 따라 설계가 완전히 달라지며, 공대와 자연과학 분야 에이전트는 완전히 다른 접근이 필요하다</li>                    <li>에이전트 AI는 미래 기술로 여겨지지만 생각보다 많은 공이 들어가 도입이 늦어지고 있는 상황이다</li>                    <li>생성형 AI의 종류는 텍스트, 이미지뿐만 아니라 비디오, 코드 생성 등으로 다양하게 확장되고 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 43</div>
+                <img src="slides/slide_043.jpg" class="slide-image" alt="슬라이드 43" loading="lazy" onclick="openLightbox('slides/slide_043.jpg', 43)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>에이전트 AI는 사용법 예시, 데이터, 툴/소프트웨어 접근권한 등을 제공하여 활용도를 높일 수 있다</li>                    <li>에이전트 AI 개발은 신입사원 교육과 유사하게 LLM 모델을 사람처럼 교육시키는 과정이다</li>                    <li>현재 에이전트 AI는 이론적으로 가능해 보이지만 실제 구현과 전달(delivery)에는 어려움이 있다</li>                    <li>생성형 AI의 영상 제작 기능은 텍스트 입력으로 영상을 생성하지만 완벽하지 않은 한계가 있다</li>                    <li>로보틱스에서는 전문가가 조이스틱으로 최적 동작을 찾은 후 이를 고정 규칙으로 설정하는 규칙 기반 방식을 사용한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 44</div>
+                <img src="slides/slide_044.jpg" class="slide-image" alt="슬라이드 44" loading="lazy" onclick="openLightbox('slides/slide_044.jpg', 44)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>에이전트는 실체가 있는 인바디먼트를 가진 존재로 이해해야 함</li>                    <li>Generative AI와 Robotics가 결합하면 Physical AI가 생성됨</li>                    <li>딥러닝 기반 AI 기술과 로보틱스 하드웨어가 만나 실질적인 Physical AI가 구현되고 있음</li>                    <li>기존 로보틱스는 고정된 환경에서 반복 작업을 수행했지만, 현재는 변화하는 환경에서 다양한 작업을 기대함</li>                    <li>휴머노이드나 모빌리티가 있는 로봇은 이동 가능하여 경험하는 환경이 계속 변화함</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 45</div>
+                <img src="slides/slide_045.jpg" class="slide-image" alt="슬라이드 45" loading="lazy" onclick="openLightbox('slides/slide_045.jpg', 45)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>미래의 로봇은 규칙 기반 시스템으로는 작동할 수 없으며, 변화하는 환경과 새로운 작업에 적응할 수 있어야 한다</li>                    <li>로봇의 환경 적응을 위해서는 학습 능력이 기본적으로 필요하다</li>                    <li>전통적인 로봇 학습에서는 강화학습(Reinforcement Learning)이라는 새로운 방식의 학습을 사용한다</li>                    <li>강화학습은 정답이 주어진 지도학습과 달리 사람의 학습 방식과 유사한 특징을 가진다</li>                    <li>강화학습에서는 실제 행동을 하는 주체(로봇 또는 에이전트)가 존재한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 46</div>
+                <img src="slides/slide_046.jpg" class="slide-image" alt="슬라이드 46" loading="lazy" onclick="openLightbox('slides/slide_046.jpg', 46)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습에서 에이전트가 활동하는 공간을 환경(environment)이라 하며, 로봇의 경우 이는 실제 물리적 세계를 의미한다</li>                    <li>로봇의 모든 움직임과 행동은 액션(action)으로 정의되며, 이는 강화학습의 기본 단위가 된다</li>                    <li>로봇이 액션을 취할 때 환경의 변화 여부는 상황에 따라 달라지며, 이는 강화학습의 환경 동역학을 보여준다</li>                    <li>환경 변화는 에이전트(로봇) 외의 다른 요소들의 변화를 의미하며, 이는 강화학습에서 중요한 피드백 메커니즘이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 47</div>
+                <img src="slides/slide_047.jpg" class="slide-image" alt="슬라이드 47" loading="lazy" onclick="openLightbox('slides/slide_047.jpg', 47)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>에이전트의 액션으로 인해 환경이 유지되거나 변할 수 있으며, 이로 인해 상태(State)가 변화한다</li>                    <li>액션은 원인이고 상태는 그에 따른 간접적 결과로 볼 수 있다</li>                    <li>리워드는 로봇이 목적을 달성했을 때 주어지는 보상 개념이다</li>                    <li>리워드는 사람의 칭찬이나 동물의 먹이와 같은 역할을 하는 학습 동기 요소이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 48</div>
+                <img src="slides/slide_048.jpg" class="slide-image" alt="슬라이드 48" loading="lazy" onclick="openLightbox('slides/slide_048.jpg', 48)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습은 사람이 정황적으로 학습하고 잘했을 때 칭찬받는 방식과 유사한 패러다임이다</li>                    <li>강화학습을 게임으로 비유하면 AI가 조이스틱을 조작하여 게임 환경과 상호작용하는 구조이다</li>                    <li>AI 에이전트가 행동을 취하면 게임 상황이 변화하고, 변화된 상황에 반응해서 다시 행동을 취하는 순환 구조이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 49</div>
+                <img src="slides/slide_049.jpg" class="slide-image" alt="슬라이드 49" loading="lazy" onclick="openLightbox('slides/slide_049.jpg', 49)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습에서는 상황이 단발성이 아닌 순차적으로 계속 발생한다</li>                    <li>리워드는 게임에서의 점수와 같은 개념으로 피드백 역할을 한다</li>                    <li>강화학습의 최종 목표는 리워드를 극대화하는 방향으로 학습하는 것이다</li>                    <li>지도학습이 정답을 맞추는 것이 목적인 반면, 강화학습은 리워드 최대화가 목적이다</li>                    <li>강화학습은 지속적인 상호작용을 통해 학습이 이루어지므로 지도학습과 근본적으로 다른 개념이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 50</div>
+                <img src="slides/slide_050.jpg" class="slide-image" alt="슬라이드 50" loading="lazy" onclick="openLightbox('slides/slide_050.jpg', 50)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>온라인 학습은 로봇이 실제 환경과 실시간으로 상호작용하면서 학습하는 방식이다</li>                    <li>로봇의 액션은 항상 성공하는 것이 아니라 실패와 성공을 반복한다</li>                    <li>강화학습은 시행착오(trial and error)를 통해 실패를 경험하면서 학습하는 패러다임이다</li>                    <li>아타리 핑퐁 게임 예시에서 초기 에이전트는 게임 규칙을 모르기 때문에 무작위 행동을 보인다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 51</div>
+                <img src="slides/slide_051.jpg" class="slide-image" alt="슬라이드 51" loading="lazy" onclick="openLightbox('slides/slide_051.jpg', 51)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 52</div>
+                <img src="slides/slide_052.jpg" class="slide-image" alt="슬라이드 52" loading="lazy" onclick="openLightbox('slides/slide_052.jpg', 52)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>온라인 강화학습은 환경과의 지속적 상호작용을 통해 trial-and-error 방식으로 학습한다</li>                    <li>로봇은 처음에는 목표 달성 방법을 전혀 모르는 상태에서 다양한 시도를 반복한다</li>                    <li>성공 경험이 연속적으로 쌓이면서 학습이 이루어지며, 성공의 경험이 중요한 학습 신호가 된다</li>                    <li>휴머노이드 로봇의 경우 일어서기라는 목표를 달성하기 위해 초기에는 무작위적인 행동을 시도한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 53</div>
+                <img src="slides/slide_053.jpg" class="slide-image" alt="슬라이드 53" loading="lazy" onclick="openLightbox('slides/slide_053.jpg', 53)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습에서 행동(액션)에 따라 로봇의 상태가 변하며, 엘리베이션 정도가 하나의 상태로 정의됨</li>                    <li>온라인 강화학습은 많은 실패 경험을 거쳐야 하므로 학습 효율성이 떨어지는 한계가 있음</li>                    <li>성공 경험을 한 번 맛본 후부터 학습이 본격적으로 시작되는 특성을 보임</li>                    <li>명시적인 보행 방법 학습 없이는 어설픈 걸음걸이를 보이는 등 불완전한 행동이 나타남</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 54</div>
+                <img src="slides/slide_054.jpg" class="slide-image" alt="슬라이드 54" loading="lazy" onclick="openLightbox('slides/slide_054.jpg', 54)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습에서는 목표 달성 여부에 대한 리워드만 주어지므로 로봇이 이쁘게 걷는 것보다는 목표 달성에만 집중한다</li>                    <li>로봇의 학습 성과는 시뮬레이션 환경에서 수많은 실패와 반복을 통해 달성된 결과이다</li>                    <li>전통적인 로보틱스 분야에서는 강화학습을 통한 학습 패러다임이 주로 사용되었다</li>                    <li>강화학습 기술은 아타리 게임 환경에서 사람 수준 이상의 성과를 달성할 수 있을 정도로 발전했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 55</div>
+                <img src="slides/slide_055.jpg" class="slide-image" alt="슬라이드 55" loading="lazy" onclick="openLightbox('slides/slide_055.jpg', 55)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습을 실제 환경에서 로봇에 적용하는 것은 여러 한계점이 존재한다</li>                    <li>실제 환경에서의 강화학습은 많은 상호작용이 필요하여 높은 비용이 발생한다</li>                    <li>실제 환경에서는 시뮬레이션과 달리 시간을 빠르게 할 수 없어 학습 속도가 느리다</li>                    <li>실제 환경에서의 강화학습은 사람의 시간에 맞춰 진행되어 10년 이상의 긴 시간이 소요될 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 56</div>
+                <img src="slides/slide_056.jpg" class="slide-image" alt="슬라이드 56" loading="lazy" onclick="openLightbox('slides/slide_056.jpg', 56)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>로봇이 실제 환경에서 강화학습을 수행할 때 실패를 반복하면서 물리적으로 손상될 위험이 있다</li>                    <li>실제 환경에서 로봇이 넘어지거나 주변 물체를 파손하는 등의 사고 위험성이 크다</li>                    <li>휴머노이드 로봇의 강화학습에는 현실적인 어려움이 존재하며 이는 크리티컬한 요소이다</li>                    <li>이러한 이유로 실제 환경 대신 시뮬레이터를 활용한 학습이 많이 사용된다</li>                    <li>공장용 로봇과 유사하지만 규칙 기반이 아닌 실제 학습 방식을 통해 로봇을 훈련시킨다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 57</div>
+                <img src="slides/slide_057.jpg" class="slide-image" alt="슬라이드 57" loading="lazy" onclick="openLightbox('slides/slide_057.jpg', 57)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>시뮬레이션 환경에서 학습한 강화학습 모델을 현실에 적용하기 어려운 이유는 시뮬레이터가 현실과 완전히 동일하지 않기 때문이다</li>                    <li>로보틱스 분야가 오래되었음에도 큰 발전을 보지 못한 것은 시뮬레이션-현실 간의 격차 문제 때문이다</li>                    <li>보스톤 다이나믹스의 로봇 동작은 걸음걸이나 밸런스 제어 영역으로 현재 설명하는 강화학습과는 다른 접근법이다</li>                    <li>보스톤 다이나믹스는 시뮬레이션에서 최적화한 후 실제 로봇에 이식하여 추가 학습하는 방식을 사용한다</li>                    <li>구글은 2018년에 강화학습이 실제 환경에서도 작동하는지 확인하기 위해 7대의 로봇으로 800시간 실험을 수행했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 58</div>
+                <img src="slides/slide_058.jpg" class="slide-image" alt="슬라이드 58" loading="lazy" onclick="openLightbox('slides/slide_058.jpg', 58)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 59</div>
+                <img src="slides/slide_059.jpg" class="slide-image" alt="슬라이드 59" loading="lazy" onclick="openLightbox('slides/slide_059.jpg', 59)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 60</div>
+                <img src="slides/slide_060.jpg" class="slide-image" alt="슬라이드 60" loading="lazy" onclick="openLightbox('slides/slide_060.jpg', 60)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>강화학습은 시간적 비용과 위험성 때문에 실제 활용에 제약이 있다</li>                    <li>오프라인 강화학습은 실제 환경과의 실시간 상호작용 대신 이미 수집된 데이터를 활용하여 학습한다</li>                    <li>오프라인 강화학습에서는 먼저 수집된 데이터로 학습한 후 일정 수준에 도달하면 실제 환경에서 온라인 학습을 진행한다</li>                    <li>오프라인 강화학습은 문제를 실제로 해결한 성공 데이터만을 사용하며 실패 데이터는 거의 포함하지 않는다</li>                    <li>오프라인 강화학습을 위해서는 충분한 양의 고품질 데이터가 필요하다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 61</div>
+                <img src="slides/slide_061.jpg" class="slide-image" alt="슬라이드 61" loading="lazy" onclick="openLightbox('slides/slide_061.jpg', 61)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>오프라인 강화학습은 이미 수집된 다량의 데이터를 활용하여 학습하는 방법이다</li>                    <li>실제로 목적한 작업을 해결한 성공 데이터만을 사용하여 학습한다</li>                    <li>실패 데이터가 거의 없는 상황에서 학습이 진행된다</li>                    <li>학습을 위해서는 대량의 데이터가 필요하다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 62</div>
+                <img src="slides/slide_062.jpg" class="slide-image" alt="슬라이드 62" loading="lazy" onclick="openLightbox('slides/slide_062.jpg', 62)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Offline 강화학습은 이미 수집된 다량의 데이터를 활용하여 학습하는 방법이다</li>                    <li>Offline 강화학습의 조건 1은 실제로 문제를 해결한 과정을 담은 데이터를 활용하는 것이다</li>                    <li>Offline 강화학습의 조건 2는 다량의 데이터를 활용하는 것이다</li>                    <li>아타리 게임 AI를 만들기 위한 데이터는 실제 사람이 게임을 플레이하는 과정에서 수집할 수 있다</li>                    <li>게임을 잘하는 사람의 플레이 데이터를 수집하여 AI 학습에 활용하는 방법을 제시했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 63</div>
+                <img src="slides/slide_063.jpg" class="slide-image" alt="슬라이드 63" loading="lazy" onclick="openLightbox('slides/slide_063.jpg', 63)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Offline 강화학습에서 문제를 해결하는 과정이 담긴 데이터를 얻기 위해 사람이 직접 수행한 데이터를 수집할 수 있다</li>                    <li>아타리 게임의 경우 게임을 잘하는 사람이 플레이하는 과정의 데이터를 수집하여 활용한다</li>                    <li>강화학습 데이터는 State(상태) → Action(행동) → Reward(보상) → 새로운 State의 순차적 패턴으로 구성된다</li>                    <li>자율주행에서 State는 도로 상황 이미지, Action은 액셀/브레이크/조향 조작, Reward는 사고 방지로 정의할 수 있다</li>                    <li>게임이나 자율주행 모두 순차적인 의사결정 과정으로 동일한 강화학습 프레임워크를 적용할 수 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 64</div>
+                <img src="slides/slide_064.jpg" class="slide-image" alt="슬라이드 64" loading="lazy" onclick="openLightbox('slides/slide_064.jpg', 64)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>오프라인 강화학습은 실제 문제 해결 과정을 담은 다량의 데이터를 활용하는 학습 방법이다</li>                    <li>테슬라는 자율주행 개발 초기부터 데이터 수집을 위한 하드웨어를 모든 제품에 탑재하여 대량의 운전 데이터를 수집했다</li>                    <li>웨이모는 제한된 지역에서만 자체 차량으로 데이터를 수집하여 테슬라 대비 데이터 양이 현저히 적다</li>                    <li>테슬라의 자율주행 성능은 판매된 모든 차량에서 수집한 양질의 오프라인 데이터 학습 결과이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 65</div>
+                <img src="slides/slide_065.jpg" class="slide-image" alt="슬라이드 65" loading="lazy" onclick="openLightbox('slides/slide_065.jpg', 65)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>웨이모는 자체 차량으로 제한된 지역에서 데이터를 수집하는 방식을 사용했다</li>                    <li>테슬라는 판매된 모든 차량에 데이터 수집 시스템을 탑재하여 대량의 데이터를 확보하는 전략을 사용했다</li>                    <li>테슬라의 대량 데이터 수집 전략이 현재 한국에서도 작동하는 자율주행 성능으로 이어졌다</li>                    <li>오프라인 강화학습에서는 양질의 데이터를 모은 후 이를 활용하는 방법이 중요하다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 66</div>
+                <img src="slides/slide_066.jpg" class="slide-image" alt="슬라이드 66" loading="lazy" onclick="openLightbox('slides/slide_066.jpg', 66)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>오프라인 강화학습에서는 LLM의 자기주도 학습 방식을 활용하여 데이터를 학습에 사용한다</li>                    <li>로봇 학습 데이터(state-action-reward)를 LLM의 단어처럼 취급하여 다음 액션을 예측하는 방식으로 학습시킨다</li>                    <li>GPT와 동일한 원리로 강화학습을 수행할 수 있는 단계에 도달했다</li>                    <li>초창기에는 단일 작업(게임, 운전 등)만 학습했지만, 현재는 다양한 작업을 통해 데이터량을 극대화할 수 있다</li>                    <li>작업과 문제가 다양해질수록 활용 가능한 데이터양도 비례적으로 증가한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 67</div>
+                <img src="slides/slide_067.jpg" class="slide-image" alt="슬라이드 67" loading="lazy" onclick="openLightbox('slides/slide_067.jpg', 67)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>단일 과목 학습보다 다중 과목 학습이 더 많은 데이터를 활용할 수 있어 학습 효과가 증대된다</li>                    <li>한 가지 문제만 해결하려는 접근법은 범용성 이슈와 학습의 한계를 가진다</li>                    <li>로봇 학습에서 데이터의 양을 극대화하는 것이 핵심 과제이다</li>                    <li>구글이 데이터 극대화 문제를 해결하기 위해 로보틱스 트랜스포머(RT)라는 새로운 방법을 제안했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 68</div>
+                <img src="slides/slide_068.jpg" class="slide-image" alt="슬라이드 68" loading="lazy" onclick="openLightbox('slides/slide_068.jpg', 68)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>단일 문제만 해결하려는 접근법은 범용성의 한계가 있어 학습 효과에 제약이 발생한다</li>                    <li>구글의 로보틱스 트랜스포머(RT)는 GPT의 언어 모델 접근법을 로봇 분야로 확장한 시도이다</li>                    <li>로보틱스 트랜스포머는 문제와 작업의 다양화, 데이터와 환경의 다양화를 통해 데이터양을 극대화한다</li>                    <li>많은 데이터에 대응하여 모델 크기를 거대화하고, 로봇의 특성상 실시간 작동이 가능하도록 최적화한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 69</div>
+                <img src="slides/slide_069.jpg" class="slide-image" alt="슬라이드 69" loading="lazy" onclick="openLightbox('slides/slide_069.jpg', 69)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Generative AI와 Robotics를 결합한 Physical AI의 개념으로 Robotics Transformers(RT) 프로젝트가 구글에서 진행됨</li>                    <li>GPT 모델의 성공 사례를 로보틱스 분야로 확장하는 시도임</li>                    <li>문제/작업의 다양화, 데이터/환경의 다양화, 모델 크기의 거대화를 통해 성능 향상을 추구함</li>                    <li>로봇의 특성상 작동의 실시간화가 중요한 목표로 설정됨</li>                    <li>언어 기반 모델에서 보여준 가능성을 로봇 분야에서 검증하고자 하는 프로젝트임</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 70</div>
+                <img src="slides/slide_070.jpg" class="slide-image" alt="슬라이드 70" loading="lazy" onclick="openLightbox('slides/slide_070.jpg', 70)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 71</div>
+                <img src="slides/slide_071.jpg" class="slide-image" alt="슬라이드 71" loading="lazy" onclick="openLightbox('slides/slide_071.jpg', 71)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 72</div>
+                <img src="slides/slide_072.jpg" class="slide-image" alt="슬라이드 72" loading="lazy" onclick="openLightbox('slides/slide_072.jpg', 72)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>자연어는 로봇이 다양한 문제와 작업을 컨트롤하기 위한 가장 좋은 인터페이스이다</li>                    <li>작업을 단순히 작업1, 작업2로 정의하면 로봇이 일반화하기 어렵다</li>                    <li>자연어로 작업을 표현하면 로봇이 훨씬 쉽게 일반화할 수 있다</li>                    <li>Robotics Transformers는 텍스트와 이미지를 입력으로, 액션을 출력으로 한다</li>                    <li>학습 방식은 파운데이션 모델과 같이 현재 상태가 주어졌을 때 다음 액션을 예측하는 형태이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 73</div>
+                <img src="slides/slide_073.jpg" class="slide-image" alt="슬라이드 73" loading="lazy" onclick="openLightbox('slides/slide_073.jpg', 73)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 74</div>
+                <img src="slides/slide_074.jpg" class="slide-image" alt="슬라이드 74" loading="lazy" onclick="openLightbox('slides/slide_074.jpg', 74)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Robotics Transformers는 작업 설명(instruction)과 현재 상태(state)를 함께 입력으로 받아 행동(action)을 출력하는 구조이다</li>                    <li>이 모델은 텍스트 기반 파운데이션 모델과 이미지 기반 파운데이션 모델을 통합한 멀티모달 모델의 확장이다</li>                    <li>모델의 디코딩 결과는 액션으로 표현되어 로봇의 물리적 행동을 결정한다</li>                    <li>이러한 구조를 VLA(Vision-Language-Action) 모델이라고 부르며, 비전과 언어, 행동을 결합한 학습 구조를 의미한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 75</div>
+                <img src="slides/slide_075.jpg" class="slide-image" alt="슬라이드 75" loading="lazy" onclick="openLightbox('slides/slide_075.jpg', 75)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Robotics Transformers는 현재 상태(State)와 작업 설명(Instruction) 텍스트를 동시에 입력으로 받는다</li>                    <li>RT는 멀티모달 파운데이션 모델의 확장으로, 텍스트와 이미지 기반 파운데이션 모델이 통합된 형태이다</li>                    <li>디코딩 결과를 액션(Action)으로 출력하여 로봇의 물리적 행동을 제어한다</li>                    <li>이러한 구조를 VLA(Vision-Language-Action)라고 표현하며, 비전, 언어, 액션을 결합한 학습 구조이다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 76</div>
+                <img src="slides/slide_076.jpg" class="slide-image" alt="슬라이드 76" loading="lazy" onclick="openLightbox('slides/slide_076.jpg', 76)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Robotics Transformers(RT)는 사람이 직접 조이스틱을 사용해 로봇을 조작하여 데몬스트레이션 데이터를 수집한다</li>                    <li>데이터 수집에 사용되는 로봇은 바퀴가 달리고 팔 하나가 달린 형태이다</li>                    <li>700개 이상의 다양한 텍스트 인스트럭션 태스크에 대한 데이터를 수집한다</li>                    <li>각 태스크에 대해 사람이 직접 수행한 데몬스트레이션을 대량으로 수집하여 학습 데이터로 활용한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 77</div>
+                <img src="slides/slide_077.jpg" class="slide-image" alt="슬라이드 77" loading="lazy" onclick="openLightbox('slides/slide_077.jpg', 77)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Robotics Transformers(RT)는 다양한 작업과 환경에서 수집된 demonstration 데이터를 활용하여 새로운 환경에서 새로운 작업 수행이 가능하다</li>                    <li>데이터 수집 시 배경과 물체 조합을 다양하게 변화시켜 로봇이 실제 경험할 변화무쌍한 환경을 반영했다</li>                    <li>학습 시 경험하지 않았던 새로운 환경(원싱 키친)에서도 주어진 인스트럭션에 따라 작업을 성공적으로 수행할 수 있다</li>                    <li>GPT의 발전 패러다임과 유사하게 로보틱스도 확장되고 있으며, 추가로 다양한 형태의 로봇을 활용하여 더 많은 데이터를 수집한다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 78</div>
+                <img src="slides/slide_078.jpg" class="slide-image" alt="슬라이드 78" loading="lazy" onclick="openLightbox('slides/slide_078.jpg', 78)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 79</div>
+                <img src="slides/slide_079.jpg" class="slide-image" alt="슬라이드 79" loading="lazy" onclick="openLightbox('slides/slide_079.jpg', 79)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 80</div>
+                <img src="slides/slide_080.jpg" class="slide-image" alt="슬라이드 80" loading="lazy" onclick="openLightbox('slides/slide_080.jpg', 80)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 81</div>
+                <img src="slides/slide_081.jpg" class="slide-image" alt="슬라이드 81" loading="lazy" onclick="openLightbox('slides/slide_081.jpg', 81)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Physical AI는 생성형 AI와 로봇공학의 결합으로, 데이터량 증대와 범용성 확대를 목표로 한다</li>                    <li>구글의 Robotics Transformers(RT)는 22개 종류의 다종 로봇으로 확장되어 적용되고 있다</li>                    <li>테슬라와 유사하게 동일한 소프트웨어를 사용하되 물리적 형태가 다른 로봇들에 적용하는 접근법을 사용한다</li>                    <li>전 세계 다양한 연구소가 각자의 로봇을 활용해 공통 프로토콜 하에서 데이터를 수집하는 협력 방식을 채택하고 있다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 82</div>
+                <img src="slides/slide_082.jpg" class="slide-image" alt="슬라이드 82" loading="lazy" onclick="openLightbox('slides/slide_082.jpg', 82)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>Physical AI는 생성형 AI와 로봇공학을 결합한 개념으로, Google의 Robotics Transformers(RT)가 대표적 사례이다</li>                    <li>데이터량 증대와 범용성 확대를 통해 하나의 AI 소프트웨어가 다양한 로봇에서 작동할 수 있도록 한다</li>                    <li>테슬라와 유사하게 물리적 형태는 다르지만 동일한 소프트웨어를 사용하여 로봇들이 작동한다</li>                    <li>Google의 RT 프로젝트는 22개 종류의 다양한 로봇을 활용하여 확장성을 입증했다</li>                    <li>전 세계 다양한 연구소가 공통 프로토콜 하에서 각자의 로봇으로 데이터를 수집하는 협업 방식을 채택했다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 83</div>
+                <img src="slides/slide_083.jpg" class="slide-image" alt="슬라이드 83" loading="lazy" onclick="openLightbox('slides/slide_083.jpg', 83)">            </div>
+            <div class="slide-right">
+                <ul class="key-points">                    <li>구글의 Robotics Transformers(RT)는 22종류의 다양한 로봇을 활용하여 데이터량을 증대시키고 작업 및 환경을 다양화했다</li>                    <li>GPT 학습에서 다양한 대량 데이터를 활용하는 것과 유사한 접근 방식을 로봇 학습에 적용했다</li>                    <li>테슬라와 같이 물리적 형태는 다르지만 동일한 소프트웨어를 사용하여 작동하는 방식이다</li>                    <li>전 세계 다양한 연구소가 각자의 로봇으로 공통된 프로토콜 하에서 데이터를 수집하는 협력 방식을 채택했다</li>                    <li>새로운 로봇에서도 학습한 내용을 재사용할 수 있도록 확장 가능한 구조로 설계되었다</li>                </ul>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 84</div>
+                <img src="slides/slide_084.jpg" class="slide-image" alt="슬라이드 84" loading="lazy" onclick="openLightbox('slides/slide_084.jpg', 84)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 85</div>
+                <img src="slides/slide_085.jpg" class="slide-image" alt="슬라이드 85" loading="lazy" onclick="openLightbox('slides/slide_085.jpg', 85)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 86</div>
+                <img src="slides/slide_086.jpg" class="slide-image" alt="슬라이드 86" loading="lazy" onclick="openLightbox('slides/slide_086.jpg', 86)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 87</div>
+                <img src="slides/slide_087.jpg" class="slide-image" alt="슬라이드 87" loading="lazy" onclick="openLightbox('slides/slide_087.jpg', 87)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 88</div>
+                <img src="slides/slide_088.jpg" class="slide-image" alt="슬라이드 88" loading="lazy" onclick="openLightbox('slides/slide_088.jpg', 88)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 89</div>
+                <img src="slides/slide_089.jpg" class="slide-image" alt="슬라이드 89" loading="lazy" onclick="openLightbox('slides/slide_089.jpg', 89)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 90</div>
+                <img src="slides/slide_090.jpg" class="slide-image" alt="슬라이드 90" loading="lazy" onclick="openLightbox('slides/slide_090.jpg', 90)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 91</div>
+                <img src="slides/slide_091.jpg" class="slide-image" alt="슬라이드 91" loading="lazy" onclick="openLightbox('slides/slide_091.jpg', 91)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 92</div>
+                <img src="slides/slide_092.jpg" class="slide-image" alt="슬라이드 92" loading="lazy" onclick="openLightbox('slides/slide_092.jpg', 92)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 93</div>
+                <img src="slides/slide_093.jpg" class="slide-image" alt="슬라이드 93" loading="lazy" onclick="openLightbox('slides/slide_093.jpg', 93)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 94</div>
+                <img src="slides/slide_094.jpg" class="slide-image" alt="슬라이드 94" loading="lazy" onclick="openLightbox('slides/slide_094.jpg', 94)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 95</div>
+                <img src="slides/slide_095.jpg" class="slide-image" alt="슬라이드 95" loading="lazy" onclick="openLightbox('slides/slide_095.jpg', 95)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 96</div>
+                <img src="slides/slide_096.jpg" class="slide-image" alt="슬라이드 96" loading="lazy" onclick="openLightbox('slides/slide_096.jpg', 96)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 97</div>
+                <img src="slides/slide_097.jpg" class="slide-image" alt="슬라이드 97" loading="lazy" onclick="openLightbox('slides/slide_097.jpg', 97)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 98</div>
+                <img src="slides/slide_098.jpg" class="slide-image" alt="슬라이드 98" loading="lazy" onclick="openLightbox('slides/slide_098.jpg', 98)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 99</div>
+                <img src="slides/slide_099.jpg" class="slide-image" alt="슬라이드 99" loading="lazy" onclick="openLightbox('slides/slide_099.jpg', 99)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 100</div>
+                <img src="slides/slide_100.jpg" class="slide-image" alt="슬라이드 100" loading="lazy" onclick="openLightbox('slides/slide_100.jpg', 100)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 101</div>
+                <img src="slides/slide_101.jpg" class="slide-image" alt="슬라이드 101" loading="lazy" onclick="openLightbox('slides/slide_101.jpg', 101)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 102</div>
+                <img src="slides/slide_102.jpg" class="slide-image" alt="슬라이드 102" loading="lazy" onclick="openLightbox('slides/slide_102.jpg', 102)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 103</div>
+                <img src="slides/slide_103.jpg" class="slide-image" alt="슬라이드 103" loading="lazy" onclick="openLightbox('slides/slide_103.jpg', 103)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 104</div>
+                <img src="slides/slide_104.jpg" class="slide-image" alt="슬라이드 104" loading="lazy" onclick="openLightbox('slides/slide_104.jpg', 104)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 105</div>
+                <img src="slides/slide_105.jpg" class="slide-image" alt="슬라이드 105" loading="lazy" onclick="openLightbox('slides/slide_105.jpg', 105)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 106</div>
+                <img src="slides/slide_106.jpg" class="slide-image" alt="슬라이드 106" loading="lazy" onclick="openLightbox('slides/slide_106.jpg', 106)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="slide-section">
+            <div class="slide-left">
+                <div class="slide-num">슬라이드 107</div>
+                <img src="slides/slide_107.jpg" class="slide-image" alt="슬라이드 107" loading="lazy" onclick="openLightbox('slides/slide_107.jpg', 107)">            </div>
+            <div class="slide-right">
+                <p class="no-points">(내용 없음)</p>            </div>
+        </div>
+
+        <div class="takeaways-section">
+            <h2>📌 Key Takeaways</h2>
+            <ul>
+                <li>인간의 Few-shot Learning 능력을 모방한 LLM은 Chain-of-Thought 프롬프팅을 통해 단계적 사고 과정을 제공받을 때 추론 성능이 크게 향상된다.</li>                <li>Agentic AI는 단발성 질답이 아닌 목표 설정→계획 수립→실행→자기점검→개선의 반복적 워크플로우로 작동하며, 이를 위해서는 메모리와 히스토리 기능이 필수적이다.</li>                <li>Physical AI는 생성형 AI와 로보틱스의 결합으로, 오프라인 강화학습을 통해 대량의 실제 작업 데이터를 활용하여 다양한 환경에서 범용적으로 작동하는 로봇을 구현한다.</li>                <li>구글의 Robotics Transformers(RT)는 자연어 명령과 시각 정보를 입력받아 로봇 행동을 출력하는 VLA(Vision-Language-Action) 모델로, 22종류의 다양한 로봇에서 공통 소프트웨어로 작동한다.</li>            </ul>
+        </div>
+
+    <script>
+        var slideImages = [];
+        var currentIdx = 0;
+        document.querySelectorAll('.slide-image').forEach(function(img) {
+            slideImages.push({ src: img.getAttribute('src'), alt: img.getAttribute('alt') });
+        });
+
+        function openLightbox(src, slideNum) {
+            currentIdx = slideImages.findIndex(function(s) { return s.src === src; });
+            if (currentIdx < 0) currentIdx = 0;
+            showSlide();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        function navLightbox(e, dir) {
+            e.stopPropagation();
+            currentIdx = (currentIdx + dir + slideImages.length) % slideImages.length;
+            showSlide();
+        }
+        function showSlide() {
+            var s = slideImages[currentIdx];
+            document.getElementById('lightbox-img').src = s.src;
+            document.getElementById('lightbox-caption').textContent = s.alt + ' (' + (currentIdx + 1) + '/' + slideImages.length + ')';
+        }
+        document.addEventListener('keydown', function(e) {
+            var lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('active')) return;
+            if (e.key === 'Escape') { lb.classList.remove('active'); document.body.style.overflow = ''; }
+            if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + slideImages.length) % slideImages.length; showSlide(); }
+            if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % slideImages.length; showSlide(); }
+        });
+    </script>
+
+        <footer>
+            생성일시: 2026-02-16 10:28:04 | 자동 생성된 강의노트
+        </footer>
+    </div>
+</body>
+</html>
